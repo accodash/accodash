@@ -9,46 +9,52 @@ use Symfony\Component\Panther\Client;
 
 class ScraperController extends Controller
 {
-    //https://www.trivago.com/en-US/lm/hotels-poland?search=200-157;dr-20240104-20240105;rc-1-2
-    function createClient() {
+    function createClient()
+    {
         $client = Client::createSeleniumClient('http://localhost:4444');
         return $client;
     }
 
-    function initialFetch() {
+    function initialFetch()
+    {
         $client = $this->createClient();
         $client->request('GET', 'https://www.trivago.com/en-US/srl/hotels-poland?search=200-157;rc-1-2');
         $crawler = $client->waitFor('li[data-testid="accommodation-list-element"]');
-        $this->fetchHotel(1, $crawler);
+        try {
+            $this->fetchHotel(1, $crawler);
+        } catch (Exception $e) {
+            echo $e;
+        }
+
 
         $client->takeScreenshot('screen.png');
-
     }
 
-    function fetchHotel($id, $crawler) {
+    function fetchHotel($id, $crawler)
+    {
         $crawler->filter("li[data-testid='accommodation-list-element']:nth-of-type($id) button")
-        ->click();// show photos panel
+            ->click(); // show photos panel
 
         $name = $crawler->filter("li[data-testid='accommodation-list-element']:nth-of-type($id) h2")
-        ->text()."\n"; //hotel name
-        $city = $crawler->filter("li[data-testid='accommodation-list-element']:nth-of-type($id) > div > article > div:nth-of-type(2) > div:first-child > button")->text()."\n";
+            ->text() . "\n"; //hotel name
+        $city = $crawler->filter("li[data-testid='accommodation-list-element']:nth-of-type($id) > div > article > div:nth-of-type(2) > div:first-child > button")->text() . "\n";
 
         $crawler->filter("li[data-testid='accommodation-list-element']:nth-of-type($id) > div > div > div:nth-of-type(1) > div > div:nth-of-type(2) > button")->click(); // show more information about building
 
         sleep(1);
 
-        $body = $crawler->filter("li[data-testid='accommodation-list-element']:nth-of-type($id) > div > div > div:nth-of-type(2) > div > section:nth-of-type(1) p")->text()."\n"; //description
+        $body = $crawler->filter("li[data-testid='accommodation-list-element']:nth-of-type($id) > div > div > div:nth-of-type(2) > div > section:nth-of-type(1) p")->text() . "\n"; //description
         $street = $crawler->filter("li[data-testid='accommodation-list-element']:nth-of-type($id) > div > div > div:nth-of-type(2) > div > section:nth-of-type(4) > div:nth-of-type(2) > div > span:nth-of-type(1)")->text(); // ulica
+        $amenities = [];
 
         for ($i = 1; $i < 100; $i++) {
             try {
-                echo $crawler->filter("li[data-testid='accommodation-list-element']:nth-of-type($id) > div > div > div:nth-of-type(2) > div > section:nth-of-type(2) ul > li:nth-of-type($i)")->text()."\n";
+                $amenity = $crawler->filter("li[data-testid='accommodation-list-element']:nth-of-type($id) > div > div > div:nth-of-type(2) > div > section:nth-of-type(2) ul > li:nth-of-type($i)")->text();
+                array_push($amenities, $amenity);
             } catch (Exception) {
-                // all amereties have been fetched
+                // all amenities have been fetched
                 break;
             }
         }
-
-
     }
 }
