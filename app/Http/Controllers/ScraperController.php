@@ -7,6 +7,7 @@ use Facebook\WebDriver\WebDriverBy;
 use Illuminate\Http\Request;
 use Facebook\WebDriver\WebDriverKeys;
 use Symfony\Component\Panther\Client;
+use Symfony\Component\DomCrawler\Crawler;
 
 class ScraperController extends Controller
 {
@@ -19,19 +20,22 @@ class ScraperController extends Controller
     function initialFetch()
     {
         $client = $this->createClient();
-        $client->request('GET', 'https://www.trivago.com/en-US/srl/hotels-poland?search=200-157;rc-1-2');
+        for ($j = 0; $j < 4; $j++) {
+            $client->request('GET', "https://www.trivago.com/en-US/srl/hotels-poland?search=200-157;rc-1-2;pa-$j");
 
-        for ($i = 1; $i < 20; $i++) {
-            try {
-                $client->executeScript('window.scrollBy(0, 1500)');
-                $this->fetchHotel($i, $client);
-            } catch (Exception $e) {
-                echo $e . "\n";
+            for ($i = 1; $i < 3; $i++) {
+                try {
+                    $client->executeScript('window.scrollBy(0, 1500)');
+                    $this->fetchHotel($i, $client);
+                } catch (Exception $e) {
+                    echo "no" . "\n";
+                }
             }
         }
+
     }
 
-    function fetchHotel($id, $client)
+    function fetchHotel(int $id, Client $client)
     {
         $liPath = "li[data-testid='accommodation-list-element']:nth-of-type($id)";
         $crawler = $client->waitFor("$liPath");
@@ -46,6 +50,17 @@ class ScraperController extends Controller
         $city = $crawler->filter("$liPath");
         $city = $city->filter("div > article > div:nth-of-type(2) > div > button")
             ->text() . "\n";
+
+        $photoNum = $crawler->filter("$liPath > div > article > div button > span:nth-of-type(2)");
+        $photoNum = intval(substr($photoNum->text(), 3)) + 1;
+
+        $crawler = $client->waitFor("$liPath > div > div > div:nth-of-type(2) > div > div");
+
+        for ($i = 1; $i < min($photoNum, 6); $i++) {
+            $img = $crawler->filter("$liPath > div > div > div:nth-of-type(2) > div > div > figure:nth-of-type($i)");
+            $img = $img->filter("img")->attr('src');
+            echo $img . "\n";
+        }
 
         $crawler = $client->waitFor("$liPath > div > div > div > div > div:nth-of-type(2) > button");
         $crawler->filter("$liPath > div > div > div > div > div:nth-of-type(2) > button")
@@ -65,22 +80,22 @@ class ScraperController extends Controller
         $crawler = $client->waitFor("$liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(2) details > div > div");
         $amenitiesConts = $crawler->children();
 
-
-
         for ($i = 1; $i <= sizeof($amenitiesConts); $i++) {
             try {
                 $crawler->filter("$liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(2)")
                     ->filter("details > div > div > div:nth-of-type($i) > ul")
                     ->each(
-                        function ($amenitiesList, $i) {
+                        function (Crawler $amenitiesList) {
                             $amenitiesList->filter("li")->each(
                                 function ($amenity) {
                                     echo $amenity->text() . "\n";
                                 });
                     });
             } catch (Exception $e) {
-                echo $e;
+                echo 'error in amenities';
             }
         }
     }
 }
+
+
