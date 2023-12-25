@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Exception;
 use Facebook\WebDriver\WebDriverBy;
 use Illuminate\Http\Request;
+use Facebook\WebDriver\WebDriverKeys;
 use Symfony\Component\Panther\Client;
 
 class ScraperController extends Controller
@@ -19,41 +20,66 @@ class ScraperController extends Controller
     {
         $client = $this->createClient();
         $client->request('GET', 'https://www.trivago.com/en-US/srl/hotels-poland?search=200-157;rc-1-2');
-        $crawler = $client->waitFor('li[data-testid="accommodation-list-element"]');
-        try {
-            $this->fetchHotel(1, $crawler);
-        } catch (Exception $e) {
-            echo $e;
+
+        for ($i = 1; $i < 20; $i++) {
+            try {
+                $client->executeScript('window.scrollBy(0, 1500)');
+                $this->fetchHotel($i, $client);
+            } catch (Exception $e) {
+                echo $e . "\n";
+            }
         }
-
-
-        $client->takeScreenshot('screen.png');
     }
 
-    function fetchHotel($id, $crawler)
+    function fetchHotel($id, $client)
     {
-        $crawler->filter("li[data-testid='accommodation-list-element']:nth-of-type($id) button")
-            ->click(); // show photos panel
+        $liPath = "li[data-testid='accommodation-list-element']:nth-of-type($id)";
+        $crawler = $client->waitFor("$liPath");
+        // show photos panel
+        $crawler->filter("$liPath button")
+            ->click();
 
-        $name = $crawler->filter("li[data-testid='accommodation-list-element']:nth-of-type($id) h2")
-            ->text() . "\n"; //hotel name
-        $city = $crawler->filter("li[data-testid='accommodation-list-element']:nth-of-type($id) > div > article > div:nth-of-type(2) > div:first-child > button")->text() . "\n";
+        // hotel name
+        $name = $crawler->filter("$liPath h2")
+            ->text() . "\n";
 
-        $crawler->filter("li[data-testid='accommodation-list-element']:nth-of-type($id) > div > div > div:nth-of-type(1) > div > div:nth-of-type(2) > button")->click(); // show more information about building
+        $city = $crawler->filter("$liPath");
+        $city = $city->filter("div > article > div:nth-of-type(2) > div > button")
+            ->text() . "\n";
 
-        sleep(1);
+        $crawler = $client->waitFor("$liPath > div > div > div > div > div:nth-of-type(2) > button");
+        $crawler->filter("$liPath > div > div > div > div > div:nth-of-type(2) > button")
+            ->click();
 
-        $body = $crawler->filter("li[data-testid='accommodation-list-element']:nth-of-type($id) > div > div > div:nth-of-type(2) > div > section:nth-of-type(1) p")->text() . "\n"; //description
-        $street = $crawler->filter("li[data-testid='accommodation-list-element']:nth-of-type($id) > div > div > div:nth-of-type(2) > div > section:nth-of-type(4) > div:nth-of-type(2) > div > span:nth-of-type(1)")->text(); // ulica
-        $amenities = [];
+        $crawler = $client->waitFor("$liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(1) p");
+        // description
+        $body = $crawler->filter("$liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(1) p")
+            ->text() . "\n";
+        $street = $crawler->filter("$liPath > div > div > div:nth-of-type(2) > div")
+            ->filter("section:nth-of-type(4) > div:nth-of-type(2) > div > span")
+            ->text();
 
-        for ($i = 1; $i < 100; $i++) {
+        $crawler->filter("$liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(2) button")
+            ->click();
+
+        $crawler = $client->waitFor("$liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(2) details > div > div");
+        $amenitiesConts = $crawler->children();
+
+
+
+        for ($i = 1; $i <= sizeof($amenitiesConts); $i++) {
             try {
-                $amenity = $crawler->filter("li[data-testid='accommodation-list-element']:nth-of-type($id) > div > div > div:nth-of-type(2) > div > section:nth-of-type(2) ul > li:nth-of-type($i)")->text();
-                array_push($amenities, $amenity);
-            } catch (Exception) {
-                // all amenities have been fetched
-                break;
+                $crawler->filter("$liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(2)")
+                    ->filter("details > div > div > div:nth-of-type($i) > ul")
+                    ->each(
+                        function ($amenitiesList, $i) {
+                            $amenitiesList->filter("li")->each(
+                                function ($amenity) {
+                                    echo $amenity->text() . "\n";
+                                });
+                    });
+            } catch (Exception $e) {
+                echo $e;
             }
         }
     }
