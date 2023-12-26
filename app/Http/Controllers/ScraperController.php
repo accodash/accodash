@@ -11,65 +11,81 @@ use Symfony\Component\DomCrawler\Crawler;
 
 class ScraperController extends Controller
 {
-    function createClient()
+    private Client $client;
+    function __construct()
     {
-        $client = Client::createSeleniumClient('http://localhost:4444');
-        return $client;
+        $this->client = Client::createSeleniumClient('http://localhost:4444');
     }
 
     function initialFetch()
     {
-        $client = $this->createClient();
-        for ($j = 0; $j < 4; $j++) {
-            $client->request('GET', "https://www.trivago.com/en-US/srl/hotels-poland?search=200-157;rc-1-2;pa-$j");
+        $count = 0;
+        $j = 1;
+        $amereties = [];
+        $cities = [];
 
-            for ($i = 1; $i < 3; $i++) {
+        while ($count < 100) {
+            $this->client
+                ->request('GET', "https://www.trivago.com/en-US/srl/hotels-poland?search=200-157;rc-1-2;pa-$j");
+
+            for ($i = 1; $i < 30; $i++) {
                 try {
-                    $client->executeScript('window.scrollBy(0, 1500)');
-                    $this->fetchHotel($i, $client);
+                    $this->client->executeScript('window.scrollBy(0, 1500)');
+                    $hotel = $this->fetchHotel($i);
+                    $this->appendToFiles($hotel);
+                    $count++;
                 } catch (Exception $e) {
-                    echo "no" . "\n";
+                    echo "omited the record \n";
                 }
             }
+            $j++;
         }
-
     }
 
-    function fetchHotel(int $id, Client $client)
+    function fetchHotel(int $id)
     {
         $liPath = "li[data-testid='accommodation-list-element']:nth-of-type($id)";
-        $crawler = $client->waitFor("$liPath");
+        $crawler = $this->client->waitFor("$liPath");
         // show photos panel
         $crawler->filter("$liPath button")
             ->click();
 
         // hotel name
         $name = $crawler->filter("$liPath h2")
-            ->text() . "\n";
-
+            ->text();
+        $type = $crawler->filter("$liPath > div > article > div:nth-of-type(2) > div > div")
+            ->filter("button > span > span:nth-of-type(2)")
+            ->text();
         $city = $crawler->filter("$liPath");
         $city = $city->filter("div > article > div:nth-of-type(2) > div > button")
-            ->text() . "\n";
+            ->text();
+
+        // only fetches skeleton
+        // $mainImage = $crawler->filter("$liPath > div > article > div > button > span > img")->attr('src');
+        // echo $mainImage;
 
         $photoNum = $crawler->filter("$liPath > div > article > div button > span:nth-of-type(2)");
         $photoNum = intval(substr($photoNum->text(), 3)) + 1;
 
-        $crawler = $client->waitFor("$liPath > div > div > div:nth-of-type(2) > div > div");
+        $crawler = $this->client->waitFor("$liPath > div > div > div:nth-of-type(2) > div > div");
 
-        for ($i = 1; $i < min($photoNum, 6); $i++) {
+        $images = [];
+
+        for ($i = 1; $i < min($photoNum, 7); $i++) {
             $img = $crawler->filter("$liPath > div > div > div:nth-of-type(2) > div > div > figure:nth-of-type($i)");
             $img = $img->filter("img")->attr('src');
-            echo $img . "\n";
+            array_push($images, $img);
         }
+        $mainImg = $images[0];
 
-        $crawler = $client->waitFor("$liPath > div > div > div > div > div:nth-of-type(2) > button");
+        $crawler = $this->client->waitFor("$liPath > div > div > div > div > div:nth-of-type(2) > button");
         $crawler->filter("$liPath > div > div > div > div > div:nth-of-type(2) > button")
             ->click();
 
-        $crawler = $client->waitFor("$liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(1) p");
+        $crawler = $this->client->waitFor("$liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(1) p");
         // description
         $body = $crawler->filter("$liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(1) p")
-            ->text() . "\n";
+            ->text();
         $street = $crawler->filter("$liPath > div > div > div:nth-of-type(2) > div")
             ->filter("section:nth-of-type(4) > div:nth-of-type(2) > div > span")
             ->text();
@@ -77,8 +93,10 @@ class ScraperController extends Controller
         $crawler->filter("$liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(2) button")
             ->click();
 
-        $crawler = $client->waitFor("$liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(2) details > div > div");
+        $crawler = $this->client
+            ->waitFor("$liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(2) details > div > div");
         $amenitiesConts = $crawler->children();
+        $GLOBALS['amenities'] = [];
 
         for ($i = 1; $i <= sizeof($amenitiesConts); $i++) {
             try {
@@ -88,14 +106,50 @@ class ScraperController extends Controller
                         function (Crawler $amenitiesList) {
                             $amenitiesList->filter("li")->each(
                                 function ($amenity) {
-                                    echo $amenity->text() . "\n";
-                                });
-                    });
+                                    array_push($GLOBALS['amenities'], $amenity->text());
+                                }
+                            );
+                        }
+                    );
             } catch (Exception $e) {
                 echo 'error in amenities';
             }
         }
+
+        return [
+            'name' => $name,
+            'body' => $body,
+            'mainImg' => $mainImg,
+            'city' => $city,
+            'street' => $street,
+            'amenities' => $GLOBALS['amenities'],
+            'images' => array_slice($images, 1),
+            'type' => $type
+        ];
+    }
+    function appendToFiles($hotel)
+    {
+        $myFile = fopen('images.txt', 'a');
+
+        foreach ($hotel['images'] as $image) {
+            $record =  $hotel['name'] . ';' . $image;
+            fwrite($myFile, $record . "\n");
+        }
+        fclose($myFile);
+
+        $myFile = fopen('hotels.txt', 'a');
+        $record = $hotel['name'] . ";" . $hotel['body'] . ";" . $hotel['street'] . ";"
+            . $hotel['city'] . ";" . $hotel['type'] . ";" . $hotel["mainImg"];
+        fwrite($myFile, $record . "\n");
+
+        fclose($myFile);
+
+        $myFile = fopen("amenities.txt", "a");
+
+        foreach ($hotel['amenities'] as $amenity) {
+            $record = $hotel['name'] . ";" . $amenity;
+            fwrite($myFile, $record . "\n");
+        }
+        fclose($myFile);
     }
 }
-
-
