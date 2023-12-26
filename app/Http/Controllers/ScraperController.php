@@ -3,11 +3,30 @@
 namespace App\Http\Controllers;
 
 use Exception;
-use Facebook\WebDriver\WebDriverBy;
-use Illuminate\Http\Request;
-use Facebook\WebDriver\WebDriverKeys;
 use Symfony\Component\Panther\Client;
 use Symfony\Component\DomCrawler\Crawler;
+
+class Building {
+    public String $name;
+    public String $body;
+    public String $mainImg;
+    public String $city;
+    public String $street;
+    public Array $amenities;
+    public Array $images;
+    public String $type;
+
+    function __construct($name, $body, $mainImg, $city, $street, $amenities, $images, $type) {
+        $this->name = $name;
+        $this->body = $body;
+        $this->mainImg = $mainImg;
+        $this->city = $city;
+        $this->street = $street;
+        $this->amenities = $amenities;
+        $this->images = $images;
+        $this->type = $type;
+    }
+}
 
 class ScraperController extends Controller
 {
@@ -21,8 +40,6 @@ class ScraperController extends Controller
     {
         $count = 0;
         $j = 1;
-        $amereties = [];
-        $cities = [];
 
         while ($count < 100) {
             $this->client
@@ -31,18 +48,18 @@ class ScraperController extends Controller
             for ($i = 1; $i < 30; $i++) {
                 try {
                     $this->client->executeScript('window.scrollBy(0, 1500)');
-                    $hotel = $this->fetchHotel($i);
-                    $this->appendToFiles($hotel);
+                    $building = $this->fetchBuilding($i);
+                    $this->appendToFiles($building);
                     $count++;
                 } catch (Exception $e) {
-                    echo "omited the record \n";
+                    echo "record omitted  \n";
                 }
             }
             $j++;
         }
     }
 
-    function fetchHotel(int $id)
+    function fetchBuilding(int $id) : Building
     {
         $liPath = "li[data-testid='accommodation-list-element']:nth-of-type($id)";
         $crawler = $this->client->waitFor("$liPath");
@@ -65,6 +82,7 @@ class ScraperController extends Controller
         // echo $mainImage;
 
         $photoNum = $crawler->filter("$liPath > div > article > div button > span:nth-of-type(2)");
+        // 3 in order to cut out "1 /" part
         $photoNum = intval(substr($photoNum->text(), 3)) + 1;
 
         $crawler = $this->client->waitFor("$liPath > div > div > div:nth-of-type(2) > div > div");
@@ -74,7 +92,7 @@ class ScraperController extends Controller
         for ($i = 1; $i < min($photoNum, 7); $i++) {
             $img = $crawler->filter("$liPath > div > div > div:nth-of-type(2) > div > div > figure:nth-of-type($i)");
             $img = $img->filter("img")->attr('src');
-            array_push($images, $img);
+            $images[] =  $img;
         }
         $mainImg = $images[0];
 
@@ -105,49 +123,41 @@ class ScraperController extends Controller
                     ->each(
                         function (Crawler $amenitiesList) {
                             $amenitiesList->filter("li")->each(
-                                function ($amenity) {
-                                    array_push($GLOBALS['amenities'], $amenity->text());
+                                function (Crawler $amenity) {
+                                    $GLOBALS['amenities'][] =  $amenity->text();
                                 }
                             );
                         }
                     );
-            } catch (Exception $e) {
+            } catch (Exception) {
                 echo 'error in amenities';
             }
         }
 
-        return [
-            'name' => $name,
-            'body' => $body,
-            'mainImg' => $mainImg,
-            'city' => $city,
-            'street' => $street,
-            'amenities' => $GLOBALS['amenities'],
-            'images' => array_slice($images, 1),
-            'type' => $type
-        ];
+        return new Building($name, $body, $mainImg, $city, $street,
+        $GLOBALS['amenities'], array_slice($images, 1), $type);
     }
-    function appendToFiles($hotel)
+    function appendToFiles(Building $building) : void
     {
         $myFile = fopen('images.txt', 'a');
 
-        foreach ($hotel['images'] as $image) {
-            $record =  $hotel['name'] . ';' . $image;
+        foreach ($building->images as $image) {
+            $record =  $building->name . ';' . $image;
             fwrite($myFile, $record . "\n");
         }
         fclose($myFile);
 
-        $myFile = fopen('hotels.txt', 'a');
-        $record = $hotel['name'] . ";" . $hotel['body'] . ";" . $hotel['street'] . ";"
-            . $hotel['city'] . ";" . $hotel['type'] . ";" . $hotel["mainImg"];
+        $myFile = fopen('buildings.txt', 'a');
+        $record = $building->name . ";" . $building->body . ";" . $building->street . ";"
+            . $building->city . ";" . $building->type . ";" . $building->mainImg;
         fwrite($myFile, $record . "\n");
 
         fclose($myFile);
 
         $myFile = fopen("amenities.txt", "a");
 
-        foreach ($hotel['amenities'] as $amenity) {
-            $record = $hotel['name'] . ";" . $amenity;
+        foreach ($building->amenities as $amenity) {
+            $record = $building->name . ";" . $amenity;
             fwrite($myFile, $record . "\n");
         }
         fclose($myFile);
