@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Http\Controllers\ScraperController;
 
+use function PHPSTORM_META\type;
+
 class ScrapeCommand extends Command
 {
     /**
@@ -12,7 +14,7 @@ class ScrapeCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'app:scrape-command';
+    protected $signature = 'app:scrape-command {country} {hotelQuantity?}';
 
     /**
      * The console command description.
@@ -26,7 +28,9 @@ class ScrapeCommand extends Command
      */
     public function handle()
     {
+        $country = strtolower($this->argument('country'));
+        $quantity = $this->argument('hotelQuantity') ?? 100;
         $scraper = new ScraperController();
-        $scraper->initialFetch();
+        $scraper->initialFetch($country, $quantity);
     }
 }

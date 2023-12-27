@@ -12,14 +12,14 @@ use Symfony\Component\DomCrawler\Crawler;
 
 class Building
 {
-    public String $name;
-    public String $body;
-    public String $mainImg;
-    public String $city;
-    public String $street;
+    public string $name;
+    public string $body;
+    public string $mainImg;
+    public string $city;
+    public string $street;
     public array $amenities;
     public array $images;
-    public String $type;
+    public string $type;
 
     function __construct($name, $body, $mainImg, $city, $street, $amenities, $images, $type)
     {
@@ -52,18 +52,21 @@ class ScraperController extends Controller
      * @throws NoSuchElementException
      * @throws TimeoutException
      */
-    function initialFetch(): void
+    function initialFetch(string $country, int $quantity): void
     {
         $count = 0;
         $page = 1;
 
-        while ($count < 100) {
+        while ($count < $quantity) {
             $this->client
-                ->request('GET', "https://www.trivago.com/en-US/srl/hotels-poland?search=200-157;rc-1-2;pa-$page");
+                ->request('GET', "https://www.trivago.com/en-US/srl/hotels-$country?search=200-157;rc-1-2;pa-$page");
 
             $this->client->waitFor('[data-testid="accommodation-list"]', config('scraper.crawler.timeouts.long'));
 
             for ($i = 1; $i < 30; $i++) {
+                if ($count == $quantity)
+                    die();
+
                 try {
                     $building = $this->fetchBuilding($i);
                     $this->appendToFiles($building);
@@ -161,17 +164,17 @@ class ScraperController extends Controller
         fclose($myFile);
     }
 
-    function fetchBuildingName(WebDriverElement&Crawler $element): String
+    function fetchBuildingName(WebDriverElement&Crawler $element): string
     {
         return $element->filter('[data-testid="item-name"]')->text();
     }
 
-    function fetchBuildingType(WebDriverElement&Crawler $element): String
+    function fetchBuildingType(WebDriverElement&Crawler $element): string
     {
         return $element->filter('[data-testid="accommodation-type"]')->text();
     }
 
-    function fetchBuildingCity(WebDriverElement&Crawler $element): String
+    function fetchBuildingCity(WebDriverElement&Crawler $element): string
     {
         return $element->filter('[data-testid="distance-label-section"]')->text();
     }
@@ -180,7 +183,7 @@ class ScraperController extends Controller
     {
         $photoNum = $element->filter('[data-testid="image-count"]');
         // Offset is set to 3 in order to cut out "1 /" part
-        return intval(substr($photoNum->text(), 3)) + 1;
+        return intval(substr($photoNum->text(), 3));
     }
 
     function fetchBuildingImages(WebDriverElement&Crawler $element, Int $photoNum): array
@@ -196,13 +199,13 @@ class ScraperController extends Controller
         return $images;
     }
 
-    function fetchBuildingBody(WebDriverElement&Crawler $element): String
+    function fetchBuildingBody(WebDriverElement&Crawler $element): string
     {
         $descriptionElement = $element->filter('[data-testid="accommodation-description"]');
         return $descriptionElement->count() > 0 ? $descriptionElement->text() : '';
     }
 
-    function fetchBuildingStreet(WebDriverElement&Crawler $element): String
+    function fetchBuildingStreet(WebDriverElement&Crawler $element): string
     {
         return $element->filter('[itemprop="streetAddress"]')->text();
     }
