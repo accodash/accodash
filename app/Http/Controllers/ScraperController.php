@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use Facebook\WebDriver\Exception\NoSuchElementException;
+use Facebook\WebDriver\Exception\TimeoutException;
 use Facebook\WebDriver\WebDriverDimension;
 use Symfony\Component\Panther\Client;
 use Symfony\Component\DomCrawler\Crawler;
@@ -55,15 +57,19 @@ class ScraperController extends Controller
             $this->client
                 ->request('GET', "https://www.trivago.com/en-US/srl/hotels-poland?search=200-157;rc-1-2;pa-$page");
 
+            $this->client
+                ->waitFor('button[data-testid="calendar-button-close"]')
+                ->filter('button[data-testid="calendar-button-close"]')
+                ->click();
+
             for ($i = 1; $i < 30; $i++) {
                 try {
-                    $this->client->executeScript('window.scrollBy(0, 1500)');
-
                     $building = $this->fetchBuilding($i);
                     $this->appendToFiles($building);
 
                     $count++;
                 } catch (Exception $e) {
+                    echo "\n" . $e->getMessage() . "\n\n";
                     echo "record omitted  \n";
                 }
             }
@@ -74,7 +80,11 @@ class ScraperController extends Controller
     function fetchBuilding(int $id): Building
     {
         $this->liPath = "li[data-testid='accommodation-list-element']:nth-of-type($id)";
+
+        $this->client->executeScript("document.querySelector(\"$this->liPath\").scrollIntoView(true)");
+
         $crawler = $this->client->waitFor("$this->liPath");
+
         // Show photos panel
         $crawler->filter("$this->liPath button")
             ->click();
