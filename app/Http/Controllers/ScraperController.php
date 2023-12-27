@@ -61,7 +61,7 @@ class ScraperController extends Controller
             $this->client
                 ->request('GET', "https://www.trivago.com/en-US/srl/hotels-poland?search=200-157;rc-1-2;pa-$page");
 
-            $this->client->waitFor('[data-testid="accommodation-list"]');
+            $this->client->waitFor('[data-testid="accommodation-list"]', config('scraper.crawler.timeouts.long'));
 
             for ($i = 1; $i < 30; $i++) {
                 try {
@@ -85,10 +85,11 @@ class ScraperController extends Controller
     function fetchBuilding(int $id): Building
     {
         $buildingSelector = "[data-testid='accommodation-list-element']:nth-of-type($id)";
+        $timeout = config('scraper.crawler.timeouts.short');
 
         $this->client->executeScript("document.querySelector(\"$buildingSelector\").scrollIntoView(true)");
 
-        $buildingElement = $this->client->waitFor($buildingSelector)->filter($buildingSelector);
+        $buildingElement = $this->client->waitFor($buildingSelector, $timeout)->filter($buildingSelector);
 
         // Show photos panel
         $buildingElement->filter("button")->click();
@@ -105,14 +106,14 @@ class ScraperController extends Controller
         // Images
         $photoNum = $this->fetchNumberOfPhotos($buildingElement);
 
-        $this->client->waitFor("$buildingSelector [data-testid=\"grid-gallery\"]");
+        $this->client->waitFor("$buildingSelector [data-testid=\"grid-gallery\"]", $timeout);
         $images = $this->fetchBuildingImages($buildingElement, $photoNum);
 
         // Opens info panel
         $buildingElement->filterXPath('.//button[contains(text(), "Info")]')->click();
 
         // Description
-        $this->client->waitFor("$buildingSelector [data-testid=\"info-slideout\"");
+        $this->client->waitFor("$buildingSelector [data-testid=\"info-slideout\"]", $timeout);
         $body = $this->fetchBuildingBody($buildingElement);
         $street = $this->fetchBuildingStreet($buildingElement);
 
