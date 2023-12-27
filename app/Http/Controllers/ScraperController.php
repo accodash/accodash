@@ -48,7 +48,11 @@ class ScraperController extends Controller
         $webDriver->manage()->window()->setSize(new WebDriverDimension($options['width'], $options['height']));
     }
 
-    function initialFetch()
+    /**
+     * @throws NoSuchElementException
+     * @throws TimeoutException
+     */
+    function initialFetch(): void
     {
         $count = 0;
         $page = 1;
@@ -77,6 +81,11 @@ class ScraperController extends Controller
         }
     }
 
+    /**
+     * @throws NoSuchElementException
+     * @throws TimeoutException
+     * @throws Exception
+     */
     function fetchBuilding(int $id): Building
     {
         $this->liPath = "li[data-testid='accommodation-list-element']:nth-of-type($id)";
@@ -91,7 +100,7 @@ class ScraperController extends Controller
 
         // Hotel name
         $name = $this->fetchBuildingName($crawler);
-        // Hotel / hostal / resort etc.
+        // Hotel / hostel / resort etc.
         $type = $this->fetchBuildingType($crawler);
         $city = $this->fetchBuildingCity($crawler);
 
@@ -219,7 +228,7 @@ class ScraperController extends Controller
             ->text();
     }
 
-    function fetchBuildingAmenities(Crawler $crawler,): array
+    function fetchBuildingAmenities(Crawler $crawler): array
     {
         $amenitiesConts = $crawler->children();
         $GLOBALS['amenities'] = [];
