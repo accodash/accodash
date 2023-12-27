@@ -103,15 +103,12 @@ class ScraperController extends Controller
 
         // Main image
         $mainImage = $crawler->filter("$this->liPath [data-testid=\"accommodation-main-image\"]")->attr('src');
-        echo $mainImage;
-        // TODO: Use the fetched main image and add it to the output file
 
         // Images
         $photoNum = $this->fetchNumberOfPhotos($crawler);
 
         $crawler = $this->client->waitFor("$this->liPath [data-testid=\"grid-gallery\"]");
         $images = $this->fetchBuildingImages($crawler, $photoNum);
-        $mainImg = $images[0];
 
         // Opens info panel
         $crawler->filter($this->liPath)->filterXPath('//button[contains(text(), "Info")]')->click();
@@ -129,11 +126,11 @@ class ScraperController extends Controller
         return new Building(
             $name,
             $body,
-            $mainImg,
+            $mainImage,
             $city,
             $street,
             $amenities,
-            array_slice($images, 1),
+            $images,
             $type
         );
     }
@@ -191,15 +188,12 @@ class ScraperController extends Controller
     {
         $images = [];
 
-        /*
-        We want to have at least 5 images (+1 image for mainImg) for each building .
-        $photoNum is our main limiter since building can have less than 6 photos
-        */
-        for ($i = 1; $i < min($photoNum, 7); $i++) {
+        for ($i = 1; $i <= min($photoNum, 5); $i++) {
             $img = $crawler->filter("$this->liPath [data-testid=\"grid-image\"]:nth-of-type($i) img")
                 ->attr('src');
             $images[] =  $img;
         }
+
         return $images;
     }
 
