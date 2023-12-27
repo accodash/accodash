@@ -59,7 +59,7 @@ class ScraperController extends Controller
 
         while ($count < $quantity) {
             $this->client
-                ->request('GET', "https://www.trivago.com/en-US/srl/hotels-$country?search=200-157;rc-1-2;pa-$page");
+                ->request('GET', "https://www.trivago.com/en-US/srl/hotels-$country?search=200-171;rc-1-2;pa-$page");
 
             $this->client->waitFor('[data-testid="accommodation-list"]', config('scraper.crawler.timeouts.long'));
 
@@ -106,11 +106,8 @@ class ScraperController extends Controller
         // Main image
         $mainImage = $buildingElement->filter("[data-testid=\"accommodation-main-image\"]")->attr('src');
 
-        // Images
-        $photoNum = $this->fetchNumberOfPhotos($buildingElement);
-
         $this->client->waitFor("$buildingSelector [data-testid=\"grid-gallery\"]", $timeout);
-        $images = $this->fetchBuildingImages($buildingElement, $photoNum);
+        $images = $this->fetchBuildingImages($buildingElement);
 
         // Opens info panel
         $buildingElement->filterXPath('.//button[contains(text(), "Info")]')->click();
@@ -179,16 +176,10 @@ class ScraperController extends Controller
         return $element->filter('[data-testid="distance-label-section"]')->text();
     }
 
-    function fetchNumberOfPhotos(WebDriverElement&Crawler $element): Int
-    {
-        $photoNum = $element->filter('[data-testid="image-count"]');
-        // Offset is set to 3 in order to cut out "1 /" part
-        return intval(substr($photoNum->text(), 3));
-    }
-
-    function fetchBuildingImages(WebDriverElement&Crawler $element, Int $photoNum): array
+    function fetchBuildingImages(WebDriverElement&Crawler $element): array
     {
         $images = [];
+        $photoNum = count($element->filter("[data-testid=\"grid-gallery\"]")->children());
 
         for ($i = 1; $i <= min($photoNum, 5); $i++) {
             $img = $element->filter("[data-testid=\"grid-image\"]:nth-of-type($i) img")
