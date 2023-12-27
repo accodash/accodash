@@ -63,7 +63,7 @@ class ScraperController extends Controller
 
             $this->client->waitFor('[data-testid="accommodation-list"]');
 
-            for ($i = 25; $i < 30; $i++) {
+            for ($i = 1; $i < 30; $i++) {
                 try {
                     $building = $this->fetchBuilding($i);
                     $this->appendToFiles($building);
