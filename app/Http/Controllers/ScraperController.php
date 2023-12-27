@@ -110,7 +110,7 @@ class ScraperController extends Controller
         $images = $this->fetchBuildingImages($buildingElement, $photoNum);
 
         // Opens info panel
-        $buildingElement->filterXPath('//button[contains(text(), "Info")]')->click();
+        $buildingElement->filterXPath('.//button[contains(text(), "Info")]')->click();
 
         // Description
         $this->client->waitFor("$buildingSelector [data-testid=\"accommodation-description\"]");
