@@ -66,6 +66,8 @@ class ScraperController extends Controller
                 ->filter('button[data-testid="calendar-button-close"]')
                 ->click();
 
+            $this->client->waitFor('[data-testid="accommodation-list"]');
+
             for ($i = 1; $i < 30; $i++) {
                 try {
                     $building = $this->fetchBuilding($i);
