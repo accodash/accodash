@@ -208,23 +208,20 @@ class ScraperController extends Controller
 
     function fetchBuildingAmenities(WebDriverElement&Crawler $element): array
     {
-        $GLOBALS['amenities'] = [];
+        $amenities = [];
 
         try {
             $element->filter('details ul')
-                ->each(
-                    function (Crawler $amenitiesList) {
-                        $amenitiesList->filter('li')->each(
-                            function (Crawler $amenity) {
-                                $GLOBALS['amenities'][] =  $amenity->text();
-                            }
-                        );
-                    }
-                );
+                ->each(function (Crawler $amenitiesList) use (&$amenities) {
+                    $amenitiesList->filter('li')
+                        ->each(function (Crawler $amenity) use (&$amenities) {
+                            $amenities[] = $amenity->text();
+                        });
+                });
         } catch (Exception) {
             echo 'error in amenities';
         }
 
-        return $GLOBALS['amenities'];
+        return $amenities;
     }
 }
