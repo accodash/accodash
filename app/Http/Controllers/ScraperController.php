@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Exception;
-use PhpParser\Node\Expr\Cast\Array_;
+use Facebook\WebDriver\WebDriverDimension;
 use Symfony\Component\Panther\Client;
 use Symfony\Component\DomCrawler\Crawler;
 
@@ -35,9 +35,15 @@ class ScraperController extends Controller
 {
     private Client $client;
     private String $liPath;
+
     function __construct()
     {
-        $this->client = Client::createSeleniumClient('http://localhost:4444');
+        $options = config('scraper.client');
+
+        $this->client = Client::createSeleniumClient($options['host']);
+
+        $webDriver = $this->client->getWebDriver();
+        $webDriver->manage()->window()->setSize(new WebDriverDimension($options['width'], $options['height']));
     }
 
     function initialFetch()
