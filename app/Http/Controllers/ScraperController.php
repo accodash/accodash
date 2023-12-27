@@ -61,11 +61,6 @@ class ScraperController extends Controller
             $this->client
                 ->request('GET', "https://www.trivago.com/en-US/srl/hotels-poland?search=200-157;rc-1-2;pa-$page");
 
-            $this->client
-                ->waitFor('button[data-testid="calendar-button-close"]')
-                ->filter('button[data-testid="calendar-button-close"]')
-                ->click();
-
             $this->client->waitFor('[data-testid="accommodation-list"]');
 
             for ($i = 1; $i < 30; $i++) {
