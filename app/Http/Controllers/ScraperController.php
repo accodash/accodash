@@ -85,7 +85,7 @@ class ScraperController extends Controller
      */
     function fetchBuilding(int $id): Building
     {
-        $this->liPath = "li[data-testid='accommodation-list-element']:nth-of-type($id)";
+        $this->liPath = "[data-testid='accommodation-list-element']:nth-of-type($id)";
 
         $this->client->executeScript("document.querySelector(\"$this->liPath\").scrollIntoView(true)");
 
@@ -102,35 +102,28 @@ class ScraperController extends Controller
         $city = $this->fetchBuildingCity($crawler);
 
         // Main image
-        $mainImage = $crawler->filter("$this->liPath img[data-testid=\"accommodation-main-image\"]")->attr('src');
+        $mainImage = $crawler->filter("$this->liPath [data-testid=\"accommodation-main-image\"]")->attr('src');
         echo $mainImage;
         // TODO: Use the fetched main image and add it to the output file
 
         // Images
         $photoNum = $this->fetchNumberOfPhotos($crawler);
 
-        $crawler = $this->client->waitFor("$this->liPath > div > div > div:nth-of-type(2) > div > div");
+        $crawler = $this->client->waitFor("$this->liPath [data-testid=\"grid-gallery\"]");
         $images = $this->fetchBuildingImages($crawler, $photoNum);
         $mainImg = $images[0];
 
-        $crawler = $this->client->waitFor("$this->liPath > div > div > div > div > div:nth-of-type(2) > button");
         // Opens info panel
-        $crawler->filter("$this->liPath > div > div > div > div > div:nth-of-type(2) > button")
-            ->click();
+        $crawler->filter($this->liPath)->filterXPath('//button[contains(text(), "Info")]')->click();
 
-        $crawler = $this->client
-            ->waitFor("$this->liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(1) p");
         // Description
+        $crawler = $this->client->waitFor("$this->liPath [data-testid=\"accommodation-description\"]");
         $body = $this->fetchBuildingBody($crawler);
         $street = $this->fetchBuildingStreet($crawler);
 
         // More amenities button
-        $crawler->filter("$this->liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(2) button")
-            ->click();
+        $crawler->filter("$this->liPath [data-testid=\"toggle-all-amenities\"]")->click();
 
-        $crawler = $this->client
-            ->waitFor("$this->liPath > div > div > div:nth-of-type(2) > div >
-            section:nth-of-type(2) details > div > div");
         $amenities = $this->fetchBuildingAmenities($crawler);
 
         return new Building(
@@ -174,26 +167,22 @@ class ScraperController extends Controller
 
     function fetchBuildingName(Crawler $crawler): String
     {
-        return $crawler->filter("$this->liPath h2")
-            ->text();
+        return $crawler->filter("$this->liPath [data-testid=\"item-name\"]")->text();
     }
 
     function fetchBuildingType(Crawler $crawler): String
     {
-        return $crawler->filter("$this->liPath > div > article > div:nth-of-type(2) > div > div")
-            ->filter("button > span > span:nth-of-type(2)")
-            ->text();
+        return $crawler->filter("$this->liPath [data-testid=\"accommodation-type\"]")->text();
     }
 
     function fetchBuildingCity(Crawler $crawler): String
     {
-        return $crawler->filter("$this->liPath > div > article > div:nth-of-type(2) > div > button")
-            ->text();
+        return $crawler->filter("$this->liPath [data-testid=\"distance-label-section\"]")->text();
     }
 
     function fetchNumberOfPhotos(Crawler $crawler): Int
     {
-        $photoNum = $crawler->filter("$this->liPath > div > article > div button > span:nth-of-type(2)");
+        $photoNum = $crawler->filter("$this->liPath [data-testid=\"image-count\"]");
         // Offset is set to 3 in order to cut out "1 /" part
         return intval(substr($photoNum->text(), 3)) + 1;
     }
@@ -207,8 +196,8 @@ class ScraperController extends Controller
         $photoNum is our main limiter since building can have less than 6 photos
         */
         for ($i = 1; $i < min($photoNum, 7); $i++) {
-            $img = $crawler->filter("$this->liPath > div > div > div:nth-of-type(2) > div > div");
-            $img = $img->filter("figure:nth-of-type($i) img")->attr('src');
+            $img = $crawler->filter("$this->liPath [data-testid=\"grid-image\"]:nth-of-type($i) img")
+                ->attr('src');
             $images[] =  $img;
         }
         return $images;
@@ -216,15 +205,13 @@ class ScraperController extends Controller
 
     function fetchBuildingBody(Crawler $crawler): String
     {
-        return $crawler->filter("$this->liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(1) p")
+        return $crawler->filter("$this->liPath [data-testid=\"accommodation-description\"]")
             ->text();
     }
 
     function fetchBuildingStreet(Crawler $crawler): String
     {
-        return $crawler->filter("$this->liPath > div > div > div:nth-of-type(2) > div")
-            ->filter("section:nth-of-type(4) > div:nth-of-type(2) > div > span")
-            ->text();
+        return $crawler->filter("$this->liPath [itemprop=\"streetAddress\"]")->text();
     }
 
     function fetchBuildingAmenities(Crawler $crawler): array
@@ -234,8 +221,7 @@ class ScraperController extends Controller
 
         for ($i = 1; $i <= sizeof($amenitiesConts); $i++) {
             try {
-                $crawler->filter("$this->liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(2)")
-                    ->filter("details > div > div > div:nth-of-type($i) > ul")
+                $crawler->filter("$this->liPath details ul")
                     ->each(
                         function (Crawler $amenitiesList) {
                             $amenitiesList->filter("li")->each(
