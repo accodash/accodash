@@ -6,6 +6,7 @@ use Exception;
 use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Exception\TimeoutException;
 use Facebook\WebDriver\WebDriverDimension;
+use Facebook\WebDriver\WebDriverElement;
 use Symfony\Component\Panther\Client;
 use Symfony\Component\DomCrawler\Crawler;
 
@@ -36,7 +37,6 @@ class Building
 class ScraperController extends Controller
 {
     private Client $client;
-    private String $liPath;
 
     function __construct()
     {
@@ -85,43 +85,42 @@ class ScraperController extends Controller
      */
     function fetchBuilding(int $id): Building
     {
-        $this->liPath = "[data-testid='accommodation-list-element']:nth-of-type($id)";
+        $buildingSelector = "[data-testid='accommodation-list-element']:nth-of-type($id)";
 
-        $this->client->executeScript("document.querySelector(\"$this->liPath\").scrollIntoView(true)");
+        $this->client->executeScript("document.querySelector(\"$buildingSelector\").scrollIntoView(true)");
 
-        $crawler = $this->client->waitFor("$this->liPath");
+        $buildingElement = $this->client->waitFor($buildingSelector)->filter($buildingSelector);
 
         // Show photos panel
-        $crawler->filter("$this->liPath button")
-            ->click();
+        $buildingElement->filter("button")->click();
 
         // Hotel name
-        $name = $this->fetchBuildingName($crawler);
+        $name = $this->fetchBuildingName($buildingElement);
         // Hotel / hostel / resort etc.
-        $type = $this->fetchBuildingType($crawler);
-        $city = $this->fetchBuildingCity($crawler);
+        $type = $this->fetchBuildingType($buildingElement);
+        $city = $this->fetchBuildingCity($buildingElement);
 
         // Main image
-        $mainImage = $crawler->filter("$this->liPath [data-testid=\"accommodation-main-image\"]")->attr('src');
+        $mainImage = $buildingElement->filter("[data-testid=\"accommodation-main-image\"]")->attr('src');
 
         // Images
-        $photoNum = $this->fetchNumberOfPhotos($crawler);
+        $photoNum = $this->fetchNumberOfPhotos($buildingElement);
 
-        $crawler = $this->client->waitFor("$this->liPath [data-testid=\"grid-gallery\"]");
-        $images = $this->fetchBuildingImages($crawler, $photoNum);
+        $this->client->waitFor("$buildingSelector [data-testid=\"grid-gallery\"]");
+        $images = $this->fetchBuildingImages($buildingElement, $photoNum);
 
         // Opens info panel
-        $crawler->filter($this->liPath)->filterXPath('//button[contains(text(), "Info")]')->click();
+        $buildingElement->filterXPath('//button[contains(text(), "Info")]')->click();
 
         // Description
-        $crawler = $this->client->waitFor("$this->liPath [data-testid=\"accommodation-description\"]");
-        $body = $this->fetchBuildingBody($crawler);
-        $street = $this->fetchBuildingStreet($crawler);
+        $this->client->waitFor("$buildingSelector [data-testid=\"accommodation-description\"]");
+        $body = $this->fetchBuildingBody($buildingElement);
+        $street = $this->fetchBuildingStreet($buildingElement);
 
         // More amenities button
-        $crawler->filter("$this->liPath [data-testid=\"toggle-all-amenities\"]")->click();
+        $buildingElement->filter("[data-testid=\"toggle-all-amenities\"]")->click();
 
-        $amenities = $this->fetchBuildingAmenities($crawler);
+        $amenities = $this->fetchBuildingAmenities($buildingElement);
 
         return new Building(
             $name,
@@ -162,34 +161,34 @@ class ScraperController extends Controller
         fclose($myFile);
     }
 
-    function fetchBuildingName(Crawler $crawler): String
+    function fetchBuildingName(WebDriverElement&Crawler $element): String
     {
-        return $crawler->filter("$this->liPath [data-testid=\"item-name\"]")->text();
+        return $element->filter('[data-testid="item-name"]')->text();
     }
 
-    function fetchBuildingType(Crawler $crawler): String
+    function fetchBuildingType(WebDriverElement&Crawler $element): String
     {
-        return $crawler->filter("$this->liPath [data-testid=\"accommodation-type\"]")->text();
+        return $element->filter('[data-testid="accommodation-type"]')->text();
     }
 
-    function fetchBuildingCity(Crawler $crawler): String
+    function fetchBuildingCity(WebDriverElement&Crawler $element): String
     {
-        return $crawler->filter("$this->liPath [data-testid=\"distance-label-section\"]")->text();
+        return $element->filter('[data-testid="distance-label-section"]')->text();
     }
 
-    function fetchNumberOfPhotos(Crawler $crawler): Int
+    function fetchNumberOfPhotos(WebDriverElement&Crawler $element): Int
     {
-        $photoNum = $crawler->filter("$this->liPath [data-testid=\"image-count\"]");
+        $photoNum = $element->filter('[data-testid="image-count"]');
         // Offset is set to 3 in order to cut out "1 /" part
         return intval(substr($photoNum->text(), 3)) + 1;
     }
 
-    function fetchBuildingImages(Crawler $crawler, Int $photoNum): array
+    function fetchBuildingImages(WebDriverElement&Crawler $element, Int $photoNum): array
     {
         $images = [];
 
         for ($i = 1; $i <= min($photoNum, 5); $i++) {
-            $img = $crawler->filter("$this->liPath [data-testid=\"grid-image\"]:nth-of-type($i) img")
+            $img = $element->filter("[data-testid=\"grid-image\"]:nth-of-type($i) img")
                 ->attr('src');
             $images[] =  $img;
         }
@@ -197,38 +196,36 @@ class ScraperController extends Controller
         return $images;
     }
 
-    function fetchBuildingBody(Crawler $crawler): String
+    function fetchBuildingBody(WebDriverElement&Crawler $element): String
     {
-        return $crawler->filter("$this->liPath [data-testid=\"accommodation-description\"]")
+        return $element->filter('[data-testid="accommodation-description"]')
             ->text();
     }
 
-    function fetchBuildingStreet(Crawler $crawler): String
+    function fetchBuildingStreet(WebDriverElement&Crawler $element): String
     {
-        return $crawler->filter("$this->liPath [itemprop=\"streetAddress\"]")->text();
+        return $element->filter('[itemprop="streetAddress"]')->text();
     }
 
-    function fetchBuildingAmenities(Crawler $crawler): array
+    function fetchBuildingAmenities(WebDriverElement&Crawler $element): array
     {
-        $amenitiesConts = $crawler->children();
         $GLOBALS['amenities'] = [];
 
-        for ($i = 1; $i <= sizeof($amenitiesConts); $i++) {
-            try {
-                $crawler->filter("$this->liPath details ul")
-                    ->each(
-                        function (Crawler $amenitiesList) {
-                            $amenitiesList->filter("li")->each(
-                                function (Crawler $amenity) {
-                                    $GLOBALS['amenities'][] =  $amenity->text();
-                                }
-                            );
-                        }
-                    );
-            } catch (Exception) {
-                echo 'error in amenities';
-            }
+        try {
+            $element->filter('details ul')
+                ->each(
+                    function (Crawler $amenitiesList) {
+                        $amenitiesList->filter('li')->each(
+                            function (Crawler $amenity) {
+                                $GLOBALS['amenities'][] =  $amenity->text();
+                            }
+                        );
+                    }
+                );
+        } catch (Exception) {
+            echo 'error in amenities';
         }
+
         return $GLOBALS['amenities'];
     }
 }
