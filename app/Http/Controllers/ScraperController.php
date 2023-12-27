@@ -63,14 +63,13 @@ class ScraperController extends Controller
 
             $this->client->waitFor('[data-testid="accommodation-list"]');
 
-            for ($i = 1; $i < 30; $i++) {
+            for ($i = 25; $i < 30; $i++) {
                 try {
                     $building = $this->fetchBuilding($i);
                     $this->appendToFiles($building);
 
                     $count++;
                 } catch (Exception $e) {
-                    echo "\n" . $e->getMessage() . "\n\n";
                     echo "record omitted  \n";
                 }
             }
@@ -113,7 +112,7 @@ class ScraperController extends Controller
         $buildingElement->filterXPath('.//button[contains(text(), "Info")]')->click();
 
         // Description
-        $this->client->waitFor("$buildingSelector [data-testid=\"accommodation-description\"]");
+        $this->client->waitFor("$buildingSelector [data-testid=\"info-slideout\"");
         $body = $this->fetchBuildingBody($buildingElement);
         $street = $this->fetchBuildingStreet($buildingElement);
 
@@ -198,8 +197,8 @@ class ScraperController extends Controller
 
     function fetchBuildingBody(WebDriverElement&Crawler $element): String
     {
-        return $element->filter('[data-testid="accommodation-description"]')
-            ->text();
+        $descriptionElement = $element->filter('[data-testid="accommodation-description"]');
+        return $descriptionElement->count() > 0 ? $descriptionElement->text() : '';
     }
 
     function fetchBuildingStreet(WebDriverElement&Crawler $element): String
