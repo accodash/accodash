@@ -104,10 +104,12 @@ class ScraperController extends Controller
         $type = $this->fetchBuildingType($crawler);
         $city = $this->fetchBuildingCity($crawler);
 
-        // Only fetches skeleton
-        // $mainImage = $crawler->filter("$this->liPath > div > article > div > button > span > img")->attr('src');
-        // echo $mainImage;
+        // Main image
+        $mainImage = $crawler->filter("$this->liPath img[data-testid=\"accommodation-main-image\"]")->attr('src');
+        echo $mainImage;
+        // TODO: Use the fetched main image and add it to the output file
 
+        // Images
         $photoNum = $this->fetchNumberOfPhotos($crawler);
 
         $crawler = $this->client->waitFor("$this->liPath > div > div > div:nth-of-type(2) > div > div");
