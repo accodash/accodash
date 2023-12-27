@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use Exception;
-use PhpParser\Node\Expr\Cast\Array_;
+use Facebook\WebDriver\Exception\NoSuchElementException;
+use Facebook\WebDriver\Exception\TimeoutException;
+use Facebook\WebDriver\WebDriverDimension;
+use Facebook\WebDriver\WebDriverElement;
 use Symfony\Component\Panther\Client;
 use Symfony\Component\DomCrawler\Crawler;
 
@@ -34,13 +37,22 @@ class Building
 class ScraperController extends Controller
 {
     private Client $client;
-    private String $liPath;
+
     function __construct()
     {
-        $this->client = Client::createSeleniumClient('http://localhost:4444');
+        $options = config('scraper.client');
+
+        $this->client = Client::createSeleniumClient($options['host']);
+
+        $webDriver = $this->client->getWebDriver();
+        $webDriver->manage()->window()->setSize(new WebDriverDimension($options['width'], $options['height']));
     }
 
-    function initialFetch()
+    /**
+     * @throws NoSuchElementException
+     * @throws TimeoutException
+     */
+    function initialFetch(): void
     {
         $count = 0;
         $page = 1;
@@ -49,10 +61,10 @@ class ScraperController extends Controller
             $this->client
                 ->request('GET', "https://www.trivago.com/en-US/srl/hotels-poland?search=200-157;rc-1-2;pa-$page");
 
+            $this->client->waitFor('[data-testid="accommodation-list"]', config('scraper.crawler.timeouts.long'));
+
             for ($i = 1; $i < 30; $i++) {
                 try {
-                    $this->client->executeScript('window.scrollBy(0, 1500)');
-
                     $building = $this->fetchBuilding($i);
                     $this->appendToFiles($building);
 
@@ -65,58 +77,59 @@ class ScraperController extends Controller
         }
     }
 
+    /**
+     * @throws NoSuchElementException
+     * @throws TimeoutException
+     * @throws Exception
+     */
     function fetchBuilding(int $id): Building
     {
-        $this->liPath = "li[data-testid='accommodation-list-element']:nth-of-type($id)";
-        $crawler = $this->client->waitFor("$this->liPath");
+        $buildingSelector = "[data-testid='accommodation-list-element']:nth-of-type($id)";
+        $timeout = config('scraper.crawler.timeouts.short');
+
+        $this->client->executeScript("document.querySelector(\"$buildingSelector\").scrollIntoView(true)");
+
+        $buildingElement = $this->client->waitFor($buildingSelector, $timeout)->filter($buildingSelector);
+
         // Show photos panel
-        $crawler->filter("$this->liPath button")
-            ->click();
+        $buildingElement->filter("button")->click();
 
         // Hotel name
-        $name = $this->fetchBuildingName($crawler);
-        // Hotel / hostal / resort etc.
-        $type = $this->fetchBuildingType($crawler);
-        $city = $this->fetchBuildingCity($crawler);
+        $name = $this->fetchBuildingName($buildingElement);
+        // Hotel / hostel / resort etc.
+        $type = $this->fetchBuildingType($buildingElement);
+        $city = $this->fetchBuildingCity($buildingElement);
 
-        // Only fetches skeleton
-        // $mainImage = $crawler->filter("$this->liPath > div > article > div > button > span > img")->attr('src');
-        // echo $mainImage;
+        // Main image
+        $mainImage = $buildingElement->filter("[data-testid=\"accommodation-main-image\"]")->attr('src');
 
-        $photoNum = $this->fetchNumberOfPhotos($crawler);
+        // Images
+        $photoNum = $this->fetchNumberOfPhotos($buildingElement);
 
-        $crawler = $this->client->waitFor("$this->liPath > div > div > div:nth-of-type(2) > div > div");
-        $images = $this->fetchBuildingImages($crawler, $photoNum);
-        $mainImg = $images[0];
+        $this->client->waitFor("$buildingSelector [data-testid=\"grid-gallery\"]", $timeout);
+        $images = $this->fetchBuildingImages($buildingElement, $photoNum);
 
-        $crawler = $this->client->waitFor("$this->liPath > div > div > div > div > div:nth-of-type(2) > button");
         // Opens info panel
-        $crawler->filter("$this->liPath > div > div > div > div > div:nth-of-type(2) > button")
-            ->click();
+        $buildingElement->filterXPath('.//button[contains(text(), "Info")]')->click();
 
-        $crawler = $this->client
-            ->waitFor("$this->liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(1) p");
         // Description
-        $body = $this->fetchBuildingBody($crawler);
-        $street = $this->fetchBuildingStreet($crawler);
+        $this->client->waitFor("$buildingSelector [data-testid=\"info-slideout\"]", $timeout);
+        $body = $this->fetchBuildingBody($buildingElement);
+        $street = $this->fetchBuildingStreet($buildingElement);
 
         // More amenities button
-        $crawler->filter("$this->liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(2) button")
-            ->click();
+        $buildingElement->filter("[data-testid=\"toggle-all-amenities\"]")->click();
 
-        $crawler = $this->client
-            ->waitFor("$this->liPath > div > div > div:nth-of-type(2) > div >
-            section:nth-of-type(2) details > div > div");
-        $amenities = $this->fetchBuildingAmenities($crawler);
+        $amenities = $this->fetchBuildingAmenities($buildingElement);
 
         return new Building(
             $name,
             $body,
-            $mainImg,
+            $mainImage,
             $city,
             $street,
             $amenities,
-            array_slice($images, 1),
+            $images,
             $type
         );
     }
@@ -148,83 +161,68 @@ class ScraperController extends Controller
         fclose($myFile);
     }
 
-    function fetchBuildingName(Crawler $crawler): String
+    function fetchBuildingName(WebDriverElement&Crawler $element): String
     {
-        return $crawler->filter("$this->liPath h2")
-            ->text();
+        return $element->filter('[data-testid="item-name"]')->text();
     }
 
-    function fetchBuildingType(Crawler $crawler): String
+    function fetchBuildingType(WebDriverElement&Crawler $element): String
     {
-        return $crawler->filter("$this->liPath > div > article > div:nth-of-type(2) > div > div")
-            ->filter("button > span > span:nth-of-type(2)")
-            ->text();
+        return $element->filter('[data-testid="accommodation-type"]')->text();
     }
 
-    function fetchBuildingCity(Crawler $crawler): String
+    function fetchBuildingCity(WebDriverElement&Crawler $element): String
     {
-        return $crawler->filter("$this->liPath > div > article > div:nth-of-type(2) > div > button")
-            ->text();
+        return $element->filter('[data-testid="distance-label-section"]')->text();
     }
 
-    function fetchNumberOfPhotos(Crawler $crawler): Int
+    function fetchNumberOfPhotos(WebDriverElement&Crawler $element): Int
     {
-        $photoNum = $crawler->filter("$this->liPath > div > article > div button > span:nth-of-type(2)");
+        $photoNum = $element->filter('[data-testid="image-count"]');
         // Offset is set to 3 in order to cut out "1 /" part
         return intval(substr($photoNum->text(), 3)) + 1;
     }
 
-    function fetchBuildingImages(Crawler $crawler, Int $photoNum): array
+    function fetchBuildingImages(WebDriverElement&Crawler $element, Int $photoNum): array
     {
         $images = [];
 
-        /*
-        We want to have at least 5 images (+1 image for mainImg) for each building .
-        $photoNum is our main limiter since building can have less than 6 photos
-        */
-        for ($i = 1; $i < min($photoNum, 7); $i++) {
-            $img = $crawler->filter("$this->liPath > div > div > div:nth-of-type(2) > div > div");
-            $img = $img->filter("figure:nth-of-type($i) img")->attr('src');
+        for ($i = 1; $i <= min($photoNum, 5); $i++) {
+            $img = $element->filter("[data-testid=\"grid-image\"]:nth-of-type($i) img")
+                ->attr('src');
             $images[] =  $img;
         }
+
         return $images;
     }
 
-    function fetchBuildingBody(Crawler $crawler): String
+    function fetchBuildingBody(WebDriverElement&Crawler $element): String
     {
-        return $crawler->filter("$this->liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(1) p")
-            ->text();
+        $descriptionElement = $element->filter('[data-testid="accommodation-description"]');
+        return $descriptionElement->count() > 0 ? $descriptionElement->text() : '';
     }
 
-    function fetchBuildingStreet(Crawler $crawler): String
+    function fetchBuildingStreet(WebDriverElement&Crawler $element): String
     {
-        return $crawler->filter("$this->liPath > div > div > div:nth-of-type(2) > div")
-            ->filter("section:nth-of-type(4) > div:nth-of-type(2) > div > span")
-            ->text();
+        return $element->filter('[itemprop="streetAddress"]')->text();
     }
 
-    function fetchBuildingAmenities(Crawler $crawler,): array
+    function fetchBuildingAmenities(WebDriverElement&Crawler $element): array
     {
-        $amenitiesConts = $crawler->children();
-        $GLOBALS['amenities'] = [];
+        $amenities = [];
 
-        for ($i = 1; $i <= sizeof($amenitiesConts); $i++) {
-            try {
-                $crawler->filter("$this->liPath > div > div > div:nth-of-type(2) > div > section:nth-of-type(2)")
-                    ->filter("details > div > div > div:nth-of-type($i) > ul")
-                    ->each(
-                        function (Crawler $amenitiesList) {
-                            $amenitiesList->filter("li")->each(
-                                function (Crawler $amenity) {
-                                    $GLOBALS['amenities'][] =  $amenity->text();
-                                }
-                            );
-                        }
-                    );
-            } catch (Exception) {
-                echo 'error in amenities';
-            }
+        try {
+            $element->filter('details ul')
+                ->each(function (Crawler $amenitiesList) use (&$amenities) {
+                    $amenitiesList->filter('li')
+                        ->each(function (Crawler $amenity) use (&$amenities) {
+                            $amenities[] = $amenity->text();
+                        });
+                });
+        } catch (Exception) {
+            echo 'error in amenities';
         }
-        return $GLOBALS['amenities'];
+
+        return $amenities;
     }
 }
