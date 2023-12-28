@@ -51,4 +51,12 @@ class Building extends Model
     {
         return $this->hasMany(Review::class);
     }
+
+    /**
+     * Get the building's accommodations.
+     */
+    public function accommodations(): HasMany
+    {
+        return $this->hasMany(Accommodation::class);
+    }
 }
