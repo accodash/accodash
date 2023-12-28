@@ -21,7 +21,9 @@ class Building extends Model
         'name',
         'description',
         'address',
-        'main_image_url'
+        'main_image_url',
+        'type_id',
+        'city_id'
     ];
 
     /**

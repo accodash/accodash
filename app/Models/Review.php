@@ -17,7 +17,9 @@ class Review extends Model
      */
     protected $fillable = [
         'score',
-        'body'
+        'body',
+        'building_id',
+        'user_id'
     ];
 
     /**
