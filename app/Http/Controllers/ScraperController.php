@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Exception;
 use Facebook\WebDriver\Exception\NoSuchElementException;
+use Facebook\WebDriver\WebDriverKeys;
 use Facebook\WebDriver\Exception\TimeoutException;
 use Facebook\WebDriver\WebDriverDimension;
 use Facebook\WebDriver\WebDriverElement;
@@ -56,10 +57,28 @@ class ScraperController extends Controller
     {
         $count = 0;
         $page = 1;
+        $this->client
+        ->request('GET', "https://www.trivago.com/");
+
 
         while ($count < $quantity) {
-            $this->client
-                ->request('GET', "https://www.trivago.com/en-US/srl/hotels-$country?search=200-171;rc-1-2;pa-$page");
+            // Selects the desirable country
+            if ($this->client->getCurrentURL() == 'https://www.trivago.com/') {
+                $crawler = $this->client->waitFor('[name="query"]');
+                $crawler->filter('[name="query"]')->sendKeys($country);
+
+                sleep(1);
+
+                $submit = $this->client->waitFor('[data-testid="search-button-with-loader"]');
+                // First click to confirm choice, Second to redirect
+                $submit->filter('[data-testid="search-button-with-loader"]')
+                    ->click();
+                $submit->filter('[data-testid="search-button-with-loader"]')
+                    ->click();
+            } else {
+                $url = $this->client->getCurrentURL() . ';pa-' . $page;
+                $this->client->request('GET', $url);
+            }
 
             $this->client->waitFor('[data-testid="accommodation-list"]', config('scraper.crawler.timeouts.long'));
 
@@ -69,7 +88,7 @@ class ScraperController extends Controller
 
                 try {
                     $building = $this->fetchBuilding($i);
-                    $this->appendToFiles($building);
+                    $this->appendToFiles($building, $country);
 
                     $count++;
                 } catch (Exception $e) {
@@ -135,9 +154,9 @@ class ScraperController extends Controller
     }
 
 
-    function appendToFiles(Building $building): void
+    function appendToFiles(Building $building, string $country): void
     {
-        $myFile = fopen('images.txt', 'a');
+        $myFile = fopen($country . 'images.txt', 'a');
 
         foreach ($building->images as $image) {
             $record =  $building->name . ';' . $image;
@@ -145,14 +164,14 @@ class ScraperController extends Controller
         }
         fclose($myFile);
 
-        $myFile = fopen('buildings.txt', 'a');
+        $myFile = fopen($country . 'buildings.txt', 'a');
         $record = $building->name . ";" . $building->body . ";" . $building->street . ";"
             . $building->city . ";" . $building->type . ";" . $building->mainImg;
         fwrite($myFile, $record . "\n");
 
         fclose($myFile);
 
-        $myFile = fopen("amenities.txt", "a");
+        $myFile = fopen($country . "amenities.txt", "a");
 
         foreach ($building->amenities as $amenity) {
             $record = $building->name . ";" . $amenity;
@@ -198,7 +217,7 @@ class ScraperController extends Controller
 
     function fetchBuildingStreet(WebDriverElement&Crawler $element): string
     {
-        return $element->filter('[itemprop="streetAddress"]')->text();
+        return substr($element->filter('[itemprop="streetAddress"]')->text(), 0, -2);
     }
 
     function fetchBuildingAmenities(WebDriverElement&Crawler $element): array

@@ -29,6 +29,7 @@ class ScrapeCommand extends Command
     public function handle()
     {
         $country = strtolower($this->argument('country'));
+        $country = strtoupper($country[0]) . substr($country, 1);
         $quantity = $this->argument('hotelQuantity') ?? 100;
         $scraper = new ScraperController();
         $scraper->initialFetch($country, $quantity);
