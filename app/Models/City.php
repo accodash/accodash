@@ -12,6 +12,15 @@ class City extends Model
     use HasFactory;
 
     /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'name'
+    ];
+
+    /**
      * Get the country that the city is placed in.
      */
     public function country(): BelongsTo

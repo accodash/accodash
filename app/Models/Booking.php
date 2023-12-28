@@ -11,6 +11,16 @@ class Booking extends Model
     use HasFactory;
 
     /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'check_in',
+        'check_out'
+    ];
+
+    /**
      * Get the accommodation that is being booked.
      */
     public function accommodation(): BelongsTo

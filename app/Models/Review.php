@@ -11,6 +11,16 @@ class Review extends Model
     use HasFactory;
 
     /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'score',
+        'body'
+    ];
+
+    /**
      * Get the review's writer.
      */
     public function user(): BelongsTo

@@ -11,6 +11,15 @@ class BuildingType extends Model
     use HasFactory;
 
     /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'name'
+    ];
+
+    /**
      * Get the buildings of that type.
      */
     public function buildings(): HasMany

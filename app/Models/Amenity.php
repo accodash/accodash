@@ -11,6 +11,15 @@ class Amenity extends Model
     use HasFactory;
 
     /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'name'
+    ];
+
+    /**
      * Get the buildings that offer the amenity.
      */
     public function buildings(): BelongsToMany

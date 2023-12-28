@@ -13,6 +13,18 @@ class Building extends Model
     use HasFactory;
 
     /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'name',
+        'description',
+        'address',
+        'main_image_url'
+    ];
+
+    /**
      * Get the city that the building is placed in.
      */
     public function city(): BelongsTo

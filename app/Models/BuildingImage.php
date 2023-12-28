@@ -11,6 +11,15 @@ class BuildingImage extends Model
     use HasFactory;
 
     /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'url'
+    ];
+
+    /**
      * Get the image's building.
      */
     public function building(): BelongsTo

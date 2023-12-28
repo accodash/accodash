@@ -12,6 +12,18 @@ class Accommodation extends Model
     use HasFactory;
 
     /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'info',
+        'price',
+        'adults_capacity',
+        'children_capacity'
+    ];
+
+    /**
      * Get the building that offers the accommodation.
      */
     public function building(): BelongsTo
