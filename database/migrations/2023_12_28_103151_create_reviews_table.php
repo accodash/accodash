@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('building_id')->constrained();
             $table->foreignId('user_id')->constrained();
-            $table->integer('score');
+            $table->unsignedSmallInteger('score');
             $table->text('body');
             $table->timestamps();
         });
