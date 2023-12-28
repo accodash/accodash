@@ -17,8 +17,8 @@ return new class extends Migration
                 ->constrained()
                 ->cascadeOnUpdate()
                 ->cascadeOnDelete();
+            $table->string('info');
             $table->decimal('price');
-            $table->text('description');
             $table->unsignedSmallInteger('adults_capacity');
             $table->unsignedSmallInteger('children_capacity');
             $table->timestamps();
