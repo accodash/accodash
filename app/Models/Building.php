@@ -43,4 +43,12 @@ class Building extends Model
     {
         return $this->belongsToMany(Amenity::class);
     }
+
+    /**
+     * Get the building's reviews.
+     */
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
 }
