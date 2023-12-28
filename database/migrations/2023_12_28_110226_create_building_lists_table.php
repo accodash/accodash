@@ -13,7 +13,10 @@ return new class extends Migration
     {
         Schema::create('building_lists', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained();
+            $table->foreignId('user_id')
+                ->constrained()
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
             $table->string('name');
             $table->timestamps();
         });
