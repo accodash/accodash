@@ -59,4 +59,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Booking::class);
     }
+
+    /**
+     * Get the user's building lists.
+     */
+    public function lists(): HasMany
+    {
+        return $this->hasMany(BuildingList::class);
+    }
 }
