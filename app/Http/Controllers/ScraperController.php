@@ -10,30 +10,9 @@ use Facebook\WebDriver\WebDriverDimension;
 use Facebook\WebDriver\WebDriverElement;
 use Symfony\Component\Panther\Client;
 use Symfony\Component\DomCrawler\Crawler;
+use App\Helpers\Building;
 
-class Building
-{
-    public string $name;
-    public string $body;
-    public string $mainImg;
-    public string $city;
-    public string $street;
-    public array $amenities;
-    public array $images;
-    public string $type;
 
-    function __construct($name, $body, $mainImg, $city, $street, $amenities, $images, $type)
-    {
-        $this->name = $name;
-        $this->body = $body;
-        $this->mainImg = $mainImg;
-        $this->city = $city;
-        $this->street = $street;
-        $this->amenities = $amenities;
-        $this->images = $images;
-        $this->type = $type;
-    }
-}
 
 class ScraperController extends Controller
 {
@@ -57,9 +36,7 @@ class ScraperController extends Controller
     {
         $count = 0;
         $page = 1;
-        $this->client
-        ->request('GET', "https://www.trivago.com/");
-
+        $this->client->request('GET', "https://www.trivago.com/");
 
         while ($count < $quantity) {
             // Selects the desirable country
