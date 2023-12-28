@@ -23,6 +23,16 @@ class Booking extends Model
     ];
 
     /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'check_in' => 'date',
+        'check_out' => 'date',
+    ];
+
+    /**
      * Get the accommodation that is being booked.
      */
     public function accommodation(): BelongsTo
