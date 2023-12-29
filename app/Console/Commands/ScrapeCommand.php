@@ -16,7 +16,7 @@ class ScrapeCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'app:scrape-command {country} {hotelQuantity?}';
+    protected $signature = 'app:scrape-command {country} {quantity?}';
 
     /**
      * The console command description.
@@ -31,10 +31,13 @@ class ScrapeCommand extends Command
 
     public function handle()
     {
-        $apiUrl = config('scraper.command.api');
+        $settings = config('scraper.command');
+        $apiUrl = $settings["countries_api"];
+        $hotelQuantity = $settings['hotel_quantity'];
+
         $country = strtolower($this->argument('country'));
         $country = strtoupper($country[0]) . substr($country, 1);
-        $quantity = $this->argument('hotelQuantity') ?? 100;
+        $quantity = $this->argument('quantity') ?? $hotelQuantity;
 
         try {
             // If failed such country doesn't exist

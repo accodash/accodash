@@ -61,7 +61,7 @@ class ScraperController extends Controller
 
             $this->client->waitFor('[data-testid="accommodation-list"]', config('scraper.crawler.timeouts.long'));
 
-            for ($i = 1; $i < 30; $i++) {
+            for ($i = 1; $i < config('scraper.crawler.hotels_per_page'); $i++) {
                 if ($count == $quantity)
                     die();
 
@@ -70,7 +70,7 @@ class ScraperController extends Controller
                     $this->appendToFiles($building, $country, $directoryName);
 
                     $count++;
-                } catch (Exception $e) {
+                } catch (Exception) {
                     echo "record omitted  \n";
                 }
             }
@@ -179,7 +179,7 @@ class ScraperController extends Controller
         $images = [];
         $photoNum = count($element->filter("[data-testid=\"grid-gallery\"]")->children());
 
-        for ($i = 1; $i <= min($photoNum, 5); $i++) {
+        for ($i = 1; $i <= min($photoNum, config('scraper.crawler.min_amount_of_photos')); $i++) {
             $img = $element->filter("[data-testid=\"grid-image\"]:nth-of-type($i) img")
                 ->attr('src');
             $images[] =  $img;

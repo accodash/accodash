@@ -33,7 +33,9 @@ return [
         'timeouts' => [
             'short' => 2,
             'long' => 10
-        ]
+        ],
+        'hotels_per_page' => 30,
+        'min_amount_of_photos' => 5
     ],
 
         /*
@@ -45,6 +47,7 @@ return [
      |
      */
     'command' => [
-        "api" => "https://restcountries.com/v3.1/name/"
+        'countries_api' => 'https://restcountries.com/v3.1/name/',
+        'hotel_quantity' => 100
     ]
 ];
