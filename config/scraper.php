@@ -34,5 +34,17 @@ return [
             'short' => 2,
             'long' => 10
         ]
+    ],
+
+        /*
+     |--------------------------------------------------------------------------
+     | Scrapper command settings
+     |--------------------------------------------------------------------------
+     |
+     | Set up how the Crawler works
+     |
+     */
+    'command' => [
+        "api" => "https://restcountries.com/v3.1/name/"
     ]
 ];
