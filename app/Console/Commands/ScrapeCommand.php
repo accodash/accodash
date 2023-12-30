@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Http\Controllers\ScraperController;
+use App\Services\BuildingService;
 use Exception;
 
 use function Laravel\Prompts\alert;
@@ -47,7 +48,8 @@ class ScrapeCommand extends Command
             die();
         }
 
-        $scraper = new ScraperController();
+        $BuildingService = new BuildingService();
+        $scraper = new ScraperController($BuildingService);
         $scraper->initialFetch($country, $quantity);
     }
 }
