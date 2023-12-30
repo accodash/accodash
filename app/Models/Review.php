@@ -26,7 +26,7 @@ class Review extends Model
     ];
 
     /**
-     * Get the review's writer.
+     * Get the review's author.
      */
     public function user(): BelongsTo
     {

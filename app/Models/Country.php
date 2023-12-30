@@ -23,7 +23,7 @@ class Country extends Model
     ];
 
     /**
-     * Get the cities that are placed inside the country.
+     * Get the cities that are located inside the country.
      */
     public function cities(): HasMany
     {

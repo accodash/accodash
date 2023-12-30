@@ -46,7 +46,7 @@ class Building extends Model
     }
 
     /**
-     * Get the type of the building.
+     * Get building's images.
      */
     public function images(): HasMany
     {

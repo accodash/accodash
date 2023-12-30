@@ -24,7 +24,7 @@ class City extends Model
     ];
 
     /**
-     * Get the country that the city is placed in.
+     * Get the country the city is located in.
      */
     public function country(): BelongsTo
     {
@@ -32,7 +32,7 @@ class City extends Model
     }
 
     /**
-     * Get the buildings placed inside the city.
+     * Get the buildings located inside the city.
      */
     public function buildings(): HasMany
     {
