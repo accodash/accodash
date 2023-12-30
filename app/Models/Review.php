@@ -34,7 +34,7 @@ class Review extends Model
     }
 
     /**
-     * Get the building being reviewed.
+     * Get the building that was reviewed.
      */
     public function building(): BelongsTo
     {

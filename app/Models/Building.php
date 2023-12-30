@@ -30,7 +30,7 @@ class Building extends Model
     ];
 
     /**
-     * Get the city that the building is placed in.
+     * Get the city that the building is located in.
      */
     public function city(): BelongsTo
     {
@@ -46,7 +46,7 @@ class Building extends Model
     }
 
     /**
-     * Get building's images.
+     * Get the building's images.
      */
     public function images(): HasMany
     {

@@ -36,7 +36,7 @@ class Booking extends Model
     ];
 
     /**
-     * Get the accommodation that is being booked.
+     * Get the accommodation that was booked.
      */
     public function accommodation(): BelongsTo
     {

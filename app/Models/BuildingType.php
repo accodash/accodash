@@ -23,7 +23,7 @@ class BuildingType extends Model
     ];
 
     /**
-     * Get buildings of that type.
+     * Get the buildings of that type.
      */
     public function buildings(): HasMany
     {
