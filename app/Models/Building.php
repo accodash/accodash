@@ -30,6 +30,15 @@ class Building extends Model
     ];
 
     /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'pending' => 'boolean',
+    ];
+
+    /**
      * Get the city that the building is located in.
      */
     public function city(): BelongsTo
@@ -75,5 +84,21 @@ class Building extends Model
     public function accommodations(): HasMany
     {
         return $this->hasMany(Accommodation::class);
+    }
+
+    /**
+     * Get the original building (if the building has an edit suggestion.)
+     */
+    public function originalBuilding(): BelongsTo
+    {
+        return $this->belongsTo(Building::class);
+    }
+
+    /**
+     * Get the building's creator.
+     */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }
