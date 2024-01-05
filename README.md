@@ -8,8 +8,10 @@ you may want to configure the IDE Helper to get some extra code suggestions.
 
 Run those commands in order to create IDE Helper files:
 
-1. `php artisan vendor:publish --provider="Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider" --tag=config`
-2. `php artisan ide-helper:model -M`
-3. `php artisan ide-helper:generate`
+1. `php artisan migrate`
+2. `php artisan vendor:publish --provider="Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider" --tag=config`
+3. `php artisan ide-helper:model -M`
+4. `php artisan ide-helper:generate`
 
-Re-run `php artisan ide-helper:model -M` every time when you edit a model.
+Re-run `php artisan ide-helper:model -M` every time you edit a model.
+(Remember to run `php artisan migrate` first if you have made any changes to the database schema.)
