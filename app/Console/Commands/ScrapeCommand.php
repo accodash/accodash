@@ -35,21 +35,21 @@ class ScrapeCommand extends Command
         $settings = config('scraper.command');
         $apiUrl = $settings["countries_api"];
         $hotelQuantity = $settings['hotel_quantity'];
-
         $country = strtolower($this->argument('country'));
-        $country = strtoupper($country[0]) . substr($country, 1);
         $quantity = $this->argument('quantity') ?? $hotelQuantity;
 
         try {
             // If failed such country doesn't exist
             $jsonData = file_get_contents("$apiUrl/$country?fullText=true");
+            $data = json_decode($jsonData);
+            $country = $data[0]->name->common;
+
+            $BuildingService = new BuildingService();
+            $scraper = new ScraperController($BuildingService);
+            $scraper->initialFetch($country, $quantity);
         } catch (Exception) {
             alert("no such country found");
             die();
         }
-
-        $BuildingService = new BuildingService();
-        $scraper = new ScraperController($BuildingService);
-        $scraper->initialFetch($country, $quantity);
     }
 }

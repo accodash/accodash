@@ -31,7 +31,7 @@ class BuildingService {
         $count = 0;
         $page = 1;
         $this->client->request('GET', "https://www.trivago.com/");
-        $directoryName = "scraperLogs/" . strtotime("now");
+        $directoryName = "scraperLogs/" . strtotime("now") . "_" . $country;
         mkdir($directoryName);
 
         while ($count < $quantity) {
@@ -129,7 +129,7 @@ class BuildingService {
 
     public function appendToFiles(Building $building, string $country, string $directoryName): void
     {
-        $myFile = fopen($directoryName . "/" . $country . 'images.txt', 'a');
+        $myFile = fopen($directoryName . '/images.txt', 'a');
 
         foreach ($building->images as $image) {
             $record =  $building->name . ';' . $image;
@@ -137,17 +137,17 @@ class BuildingService {
         }
         fclose($myFile);
 
-        $myFile = fopen($directoryName . "/" . $country . 'buildings.txt', 'a');
-        $record = $building->name . ";" . $building->body . ";" . $building->street . ";"
-            . $building->city . ";" . $building->type . ";" . $building->mainImg;
+        $myFile = fopen($directoryName . '/buildings.txt', 'a');
+        $record = $building->name . ';' . $building->body . ';' . $building->street . ';'
+            . $building->city . ';' . $building->type . ';' . $building->mainImg;
         fwrite($myFile, $record . "\n");
 
         fclose($myFile);
 
-        $myFile = fopen($directoryName . "/" . $country . "amenities.txt", "a");
+        $myFile = fopen($directoryName . '/amenities.txt', 'a');
 
         foreach ($building->amenities as $amenity) {
-            $record = $building->name . ";" . $amenity;
+            $record = $building->name . ';' . $amenity;
             fwrite($myFile, $record . "\n");
         }
         fclose($myFile);

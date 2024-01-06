@@ -38,7 +38,7 @@ return [
         'min_amount_of_photos' => 5
     ],
 
-        /*
+    /*
      |--------------------------------------------------------------------------
      | Scrapper command settings
      |--------------------------------------------------------------------------
@@ -46,6 +46,7 @@ return [
      | Set up how the Crawler works
      |
      */
+
     'command' => [
         'countries_api' => 'https://restcountries.com/v3.1/name/',
         'hotel_quantity' => 100

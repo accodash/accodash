@@ -16,11 +16,11 @@ use App\Services\BuildingService;
 
 class ScraperController extends Controller
 {
-    private BuildingService $BuildingService;
+    private BuildingService $buildingService;
 
-    function __construct(BuildingService $BuildingService)
+    function __construct(BuildingService $buildingService)
     {
-        $this->BuildingService = $BuildingService;
+        $this->buildingService = $buildingService;
     }
 
     /**
@@ -29,6 +29,6 @@ class ScraperController extends Controller
      */
     function initialFetch(string $country, int $quantity): void
     {
-        $this->BuildingService->initialFetch($country, $quantity);
+        $this->buildingService->initialFetch($country, $quantity);
     }
 }
