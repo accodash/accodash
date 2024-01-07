@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use App\Services\PopulateService;
+use function Laravel\Prompts\alert;
 
 class PopulateCommand extends Command
 {
@@ -25,6 +27,14 @@ class PopulateCommand extends Command
      */
     public function handle()
     {
-        //
+        $directories = scandir("./scraperLogs");
+
+        if (count($directories) < 3) {
+            alert("There are no files with data");
+            die();
+        }
+
+        $populateService = new PopulateService();
+        $populateService->populate($directories);
     }
 }
