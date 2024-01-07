@@ -10,10 +10,13 @@ class PopulateService {
             $files = scandir('./scraperLogs/' . $directories[$i]);
 
             if (count($files) < 5) die();
+
             $countryName = explode("_", $directories[$i])[1];
             $country = Country::where("name", $countryName)->first();
             if (!$country) {
-                $country = Country::create(['name' => $countryName]);
+                $country = Country::create([
+                    'name' => $countryName
+                ]);
             }
             $this->populateBuildings("./scraperLogs/" . $directories[$i] . "/buildings.txt", $country);
         }
@@ -25,16 +28,10 @@ class PopulateService {
         if ($file) {
             while (($line = fgets($file)) !== false) {
                 $values = explode(";", $line);
-                $cityName = $values[4];
+                $cityName = $values[3];
+                $buildingType = $values[4];
 
-                $city = City::where("name", $cityName)->first();
-
-                if (!$city) {
-                    $createdCity = $country->cities()->create([
-                        'name' => $cityName
-                    ]);
-                    echo $createdCity->id;
-                }
+                $cityId = $this->getCity($cityName, $country);
 
             }
             fclose($file);
@@ -42,4 +39,16 @@ class PopulateService {
             die();
         }
     }
+    private function getCity(string $cityName, Country $country) : int {
+        $city = City::where("name", $cityName)->first();
+
+        if (!$city) {
+            $city = $country->cities()->create([
+                'name' => $cityName
+            ]);
+        }
+        return $city->id;
+    }
+
+
 }
