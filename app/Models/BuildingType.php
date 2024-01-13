@@ -27,6 +27,6 @@ class BuildingType extends Model
      */
     public function buildings(): HasMany
     {
-        return $this->hasMany(Building::class);
+        return $this->hasMany(Building::class, 'type_id');
     }
 }

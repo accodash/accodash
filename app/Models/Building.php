@@ -26,7 +26,8 @@ class Building extends Model
         'address',
         'main_image_url',
         'type_id',
-        'city_id'
+        'city_id',
+        'pending'
     ];
 
     /**
@@ -67,7 +68,7 @@ class Building extends Model
      */
     public function amenities(): BelongsToMany
     {
-        return $this->belongsToMany(Amenity::class);
+        return $this->belongsToMany(Amenity::class, 'buildings_amenities');
     }
 
     /**
