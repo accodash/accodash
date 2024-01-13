@@ -36,6 +36,6 @@ class BuildingList extends Model
      */
     public function buildings(): BelongsToMany
     {
-        return $this->belongsToMany(User::class);
+        return $this->belongsToMany(User::class, 'building_lists_buildings');
     }
 }
