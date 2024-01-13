@@ -68,7 +68,7 @@ class Building extends Model
      */
     public function amenities(): BelongsToMany
     {
-        return $this->belongsToMany(Amenity::class);
+        return $this->belongsToMany(Amenity::class, 'buildings_amenities');
     }
 
     /**
