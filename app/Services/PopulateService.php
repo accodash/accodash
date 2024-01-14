@@ -4,10 +4,8 @@ namespace App\Services;
 use App\Models\Amenity;
 use App\Models\Building;
 use App\Models\BuildingImage;
-use App\Models\City;
 use App\Models\Country;
 use App\Models\BuildingType;
-use Doctrine\DBAL\Driver\OCI8\Exception\Error;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Exception;
 
