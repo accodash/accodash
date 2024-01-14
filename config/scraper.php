@@ -49,6 +49,8 @@ return [
 
     'command' => [
         'countries_api' => 'https://restcountries.com/v3.1/name/',
-        'hotel_quantity' => 100
+        'hotel_quantity' => 100,
+        'min_number_of_directories' => 1,
+        'min_number_of_files' => 3
     ]
 ];

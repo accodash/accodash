@@ -27,10 +27,12 @@ class PopulateCommand extends Command
      */
     public function handle()
     {
+        $settings = config('scraper.command');
         $directory = $this->argument('directory') ?? null;
         $directories = scandir("./scraperLogs");
 
-        if (count($directories) < 3) {
+        // Additional 2 for './' and '../'
+        if (count($directories) < $settings['min_number_of_directories'] + 2) {
             alert("There are no directories with data");
             die();
         }
