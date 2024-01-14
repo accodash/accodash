@@ -61,7 +61,7 @@ class BuildingService {
 
                 try {
                     $building = $this->fetchBuilding($i);
-                    $this->appendToFiles($building, $country, $directoryName);
+                    $this->appendToFiles($building, $directoryName);
 
                     $count++;
                 } catch (Exception) {
@@ -127,7 +127,7 @@ class BuildingService {
     }
 
 
-    public function appendToFiles(Building $building, string $country, string $directoryName): void
+    public function appendToFiles(Building $building, string $directoryName): void
     {
         $myFile = fopen($directoryName . '/images.txt', 'a');
 

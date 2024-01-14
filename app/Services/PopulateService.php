@@ -21,10 +21,7 @@ class PopulateService {
             // Additional two is for './' and '../'
             if (count($files) < 5) die();
 
-            $countryName = explode('_', $directories[$i])[1];
-            $country = Country::firstOrCreate([
-                'name' => $countryName
-            ]);
+            $country = $this->getCountry(explode('_', $directories[$i])[1]);
 
             $this->populateBuildings('./scraperLogs/' . $directories[$i] . '/buildings.txt', $country);
             $this->populateAmenities('./scraperLogs/' . $directories[$i] . '/amenities.txt');
@@ -42,8 +39,8 @@ class PopulateService {
                 $cityName = $values[3];
                 $buildingType = $values[4];
 
-                $cityId = $this->getCity($cityName, $country);
-                $typeId = $this->getBuildingType($buildingType);
+                $cityId = $this->getCityId($cityName, $country);
+                $typeId = $this->getBuildingTypeId($buildingType);
 
                 Building::firstOrCreate([
                     'name' => $values[0],
@@ -53,14 +50,20 @@ class PopulateService {
                     'city_id' => $cityId,
                     'main_image_url' => $values[5],
                     'pending' => 1
-                ])->save();
+                ]);
             }
             fclose($file);
         } else {
             die();
         }
     }
-    private function getCity(string $cityName, Country $country) : int
+    private function getCountry(string $countryName) : Country{
+        return Country::firstOrCreate([
+            'name' => $countryName
+        ]);
+    }
+
+    private function getCityId(string $cityName, Country $country) : int
     {
         $city = $country->cities()->firstOrCreate([
             'name' => $cityName
@@ -69,7 +72,7 @@ class PopulateService {
         return $city->id;
     }
 
-    private function getBuildingType(string $typeName) : int
+    private function getBuildingTypeId(string $typeName) : int
     {
         $type = BuildingType::firstOrCreate([
             "name" => $typeName
@@ -125,6 +128,7 @@ class PopulateService {
                     $building = Building::where([
                         'name' => $hotelName
                     ])->firstOrFail();
+
 
                     $building->images()->save($image);
                 } catch (Exception) {
