@@ -13,7 +13,7 @@ class PopulateCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'app:populate-command';
+    protected $signature = 'app:populate-command {directory?}';
 
     /**
      * The console command description.
@@ -27,11 +27,22 @@ class PopulateCommand extends Command
      */
     public function handle()
     {
+        $directory = $this->argument('directory') ?? null;
         $directories = scandir("./scraperLogs");
 
         if (count($directories) < 3) {
-            alert("There are no files with data");
+            alert("There are no directories with data");
             die();
+        }
+        $directories = array_slice($directories, 2);
+
+        if ($directory) {
+            if (!in_array($directory, $directories)) {
+                alert("This directory doesn't exist");
+                die();
+            }
+
+            $directories = [$directory];
         }
 
         $populateService = new PopulateService();

@@ -14,8 +14,7 @@ use Exception;
 class PopulateService {
     public function populate(array $directories) : void
     {
-        // Starting from 2 because of './' and '../'
-        for ($i = 2; $i < count($directories); $i++) {
+        for ($i = 0; $i < count($directories); $i++) {
             $files = scandir('./scraperLogs/' . $directories[$i]);
 
             // Additional two is for './' and '../'
@@ -57,7 +56,8 @@ class PopulateService {
             die();
         }
     }
-    private function getCountry(string $countryName) : Country{
+    private function getCountry(string $countryName) : Country
+    {
         return Country::firstOrCreate([
             'name' => $countryName
         ]);
@@ -81,7 +81,8 @@ class PopulateService {
         return $type->id;
     }
 
-    private function populateAmenities(string $path) {
+    private function populateAmenities(string $path)
+    {
         $file = fopen($path, 'r');
 
         if ($file) {
@@ -112,7 +113,8 @@ class PopulateService {
     /**
      * @throws ModelNotFoundException
      */
-    private function populateBuildingsImages(string $path) {
+    private function populateBuildingsImages(string $path)
+    {
         $file = fopen($path, 'r');
 
         if ($file) {
@@ -128,7 +130,6 @@ class PopulateService {
                     $building = Building::where([
                         'name' => $hotelName
                     ])->firstOrFail();
-
 
                     $building->images()->save($image);
                 } catch (Exception) {
