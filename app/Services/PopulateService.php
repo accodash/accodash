@@ -12,14 +12,13 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Exception;
 
 class PopulateService {
-    private $settings = config('scraper.command');
     public function populate(array $directories) : void
     {
         for ($i = 0; $i < count($directories); $i++) {
             $files = scandir('./scraperLogs/' . $directories[$i]);
 
             // Additional 2 for './' and '../'
-            if (count($files) < $this->settings['min_number_of_files'] + 2) die();
+            if (count($files) < config('scraper.command.min_number_of_files') + 2) die();
 
             $country = $this->getCountry(explode('_', $directories[$i])[1]);
 
@@ -82,7 +81,7 @@ class PopulateService {
         return $type->id;
     }
 
-    private function populateAmenities(string $path)
+    private function populateAmenities(string $path) : void
     {
         $file = fopen($path, 'r');
 
@@ -114,7 +113,7 @@ class PopulateService {
     /**
      * @throws ModelNotFoundException
      */
-    private function populateBuildingsImages(string $path)
+    private function populateBuildingsImages(string $path) : void
     {
         $file = fopen($path, 'r');
 

@@ -30,8 +30,8 @@ class BuildingService {
     {
         $count = 0;
         $page = 1;
-        $this->client->request('GET', "https://www.trivago.com/");
-        $directoryName = "scraperLogs/" . strtotime("now") . "_" . $country;
+        $this->client->request('GET', 'https://www.trivago.com/');
+        $directoryName = 'scraperLogs/' . strtotime('now') . '_' . $country;
         mkdir($directoryName);
 
         while ($count < $quantity) {
@@ -190,7 +190,8 @@ class BuildingService {
 
     public function fetchBuildingStreet(WebDriverElement&Crawler $element): string
     {
-        return substr($element->filter('[itemprop="streetAddress"]')->text(), 0, -2);
+        $postalCode = $element->filter('[itemprop="postalCode"]')->text();
+        return $element->filter('[itemprop="streetAddress"]')->text() . $postalCode;
     }
 
     public function fetchBuildingAmenities(WebDriverElement&Crawler $element): array

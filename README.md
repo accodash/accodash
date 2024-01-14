@@ -27,3 +27,9 @@ Run those commands in order to create IDE Helper files:
 Re-run `php artisan ide-helper:model -M` every time you edit a model.
 (Remember to run `php artisan migrate` first if you have made any changes to the database schema.)
 
+## Scraper usage
+
+1. Make sure that selenium is running.
+2. Run `php artisan app:scrape-command {nameOfDesiredCountry} {quantity?}`. `nameOfDesiredCountry` should be the country from which you wish to get the buildings, and `quantity` is the number of buildings you wish to get, it is optional and is set to 100 by default.
+3. Run `php artisan app:populate-command {directoryName?}` to populate your database. `directoryName` is the name of directory you wish to use, by default the command will use all the directories in scraperLogs folder.
+
