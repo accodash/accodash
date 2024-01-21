@@ -12,6 +12,7 @@ use App\Helpers\Building;
 
 class ScrapeService {
     private Client $client;
+
     function __construct()
     {
         $options = config('scraper.client');
@@ -21,6 +22,7 @@ class ScrapeService {
         $webDriver = $this->client->getWebDriver();
         $webDriver->manage()->window()->setSize(new WebDriverDimension($options['width'], $options['height']));
     }
+
     /**
      * @throws NoSuchElementException
      * @throws TimeoutException
@@ -64,7 +66,7 @@ class ScrapeService {
 
                     $count++;
                 } catch (Exception) {
-                    echo "record omitted  \n";
+                    echo "Ommitted a building: Failed to scrape building $i on page $page.\n";
                 }
             }
             $page++;
@@ -76,7 +78,7 @@ class ScrapeService {
      * @throws TimeoutException
      * @throws Exception
      */
-    public function fetchBuilding(int $id): Building
+    private function fetchBuilding(int $id): Building
     {
         $buildingSelector = "[data-testid='accommodation-list-element']:nth-of-type($id)";
         $timeout = config('scraper.crawler.timeouts.short');
@@ -125,8 +127,7 @@ class ScrapeService {
         );
     }
 
-
-    public function appendToFiles(Building $building, string $directoryName): void
+    private function appendToFiles(Building $building, string $directoryName): void
     {
         $myFile = fopen($directoryName . '/images.txt', 'a');
 
@@ -152,22 +153,22 @@ class ScrapeService {
         fclose($myFile);
     }
 
-    public function fetchBuildingName(WebDriverElement&Crawler $element): string
+    private function fetchBuildingName(WebDriverElement&Crawler $element): string
     {
         return $element->filter('[data-testid="item-name"]')->text();
     }
 
-    public function fetchBuildingType(WebDriverElement&Crawler $element): string
+    private function fetchBuildingType(WebDriverElement&Crawler $element): string
     {
         return $element->filter('[data-testid="accommodation-type"]')->text();
     }
 
-    public function fetchBuildingCity(WebDriverElement&Crawler $element): string
+    private function fetchBuildingCity(WebDriverElement&Crawler $element): string
     {
         return $element->filter('[data-testid="distance-label-section"]')->text();
     }
 
-    public function fetchBuildingImages(WebDriverElement&Crawler $element): array
+    private function fetchBuildingImages(WebDriverElement&Crawler $element): array
     {
         $images = [];
         $photoNum = count($element->filter("[data-testid=\"grid-gallery\"]")->children());
@@ -181,19 +182,19 @@ class ScrapeService {
         return $images;
     }
 
-    public function fetchBuildingBody(WebDriverElement&Crawler $element): string
+    private function fetchBuildingBody(WebDriverElement&Crawler $element): string
     {
         $descriptionElement = $element->filter('[data-testid="accommodation-description"]');
         return $descriptionElement->count() > 0 ? $descriptionElement->text() : '';
     }
 
-    public function fetchBuildingStreet(WebDriverElement&Crawler $element): string
+    private function fetchBuildingStreet(WebDriverElement&Crawler $element): string
     {
         $postalCode = $element->filter('[itemprop="postalCode"]')->text();
         return $element->filter('[itemprop="streetAddress"]')->text() . $postalCode;
     }
 
-    public function fetchBuildingAmenities(WebDriverElement&Crawler $element): array
+    private function fetchBuildingAmenities(WebDriverElement&Crawler $element): array
     {
         $amenities = [];
 
