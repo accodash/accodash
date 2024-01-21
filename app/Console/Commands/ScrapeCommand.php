@@ -3,12 +3,10 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Http\Controllers\ScraperController;
-use App\Services\BuildingService;
+use App\Services\ScrapeService;
 use Exception;
 
 use function Laravel\Prompts\alert;
-use function PHPSTORM_META\type;
 
 class ScrapeCommand extends Command
 {
@@ -44,9 +42,8 @@ class ScrapeCommand extends Command
             $data = json_decode($jsonData);
             $country = $data[0]->name->common;
 
-            $BuildingService = new BuildingService();
-            $scraper = new ScraperController($BuildingService);
-            $scraper->initialFetch($country, $quantity);
+            $scrapeService = new ScrapeService();
+            $scrapeService->initialFetch($country, $quantity);
         } catch (Exception) {
             alert("no such country found");
             die();

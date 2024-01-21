@@ -10,8 +10,7 @@ use Symfony\Component\Panther\Client;
 use Symfony\Component\DomCrawler\Crawler;
 use App\Helpers\Building;
 
-
-class BuildingService {
+class ScrapeService {
     private Client $client;
     function __construct()
     {
