@@ -191,7 +191,8 @@ class ScrapeService {
     private function fetchBuildingStreet(WebDriverElement&Crawler $element): string
     {
         $postalCode = $element->filter('[itemprop="postalCode"]')->text();
-        return $element->filter('[itemprop="streetAddress"]')->text() . $postalCode;
+        $streetAdress = $element->filter('[itemprop="streetAddress"]')->text();
+        return $streetAdress . $postalCode;
     }
 
     private function fetchBuildingAmenities(WebDriverElement&Crawler $element): array
@@ -209,7 +210,6 @@ class ScrapeService {
         } catch (Exception) {
             echo 'error in amenities';
         }
-
         return $amenities;
     }
 

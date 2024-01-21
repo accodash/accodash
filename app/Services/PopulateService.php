@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Exception;
 
 class PopulateService {
-    public function populate(array $directories) : void
+    public function populate(array $directories): void
     {
         for ($i = 0; $i < count($directories); $i++) {
             $files = scandir('./scraperLogs/' . $directories[$i]);
@@ -26,7 +26,7 @@ class PopulateService {
         }
     }
 
-    private function populateBuildings(string $path, Country $country)
+    private function populateBuildings(string $path, Country $country): void
     {
         $file = fopen($path, 'r');
 
@@ -54,14 +54,14 @@ class PopulateService {
             die();
         }
     }
-    private function getCountry(string $countryName) : Country
+    private function getCountry(string $countryName): Country
     {
         return Country::firstOrCreate([
             'name' => $countryName
         ]);
     }
 
-    private function getCityId(string $cityName, Country $country) : int
+    private function getCityId(string $cityName, Country $country): int
     {
         $city = $country->cities()->firstOrCreate([
             'name' => $cityName
@@ -70,7 +70,7 @@ class PopulateService {
         return $city->id;
     }
 
-    private function getBuildingTypeId(string $typeName) : int
+    private function getBuildingTypeId(string $typeName): int
     {
         $type = BuildingType::firstOrCreate([
             'name' => $typeName
@@ -79,7 +79,7 @@ class PopulateService {
         return $type->id;
     }
 
-    private function populateAmenities(string $path) : void
+    private function populateAmenities(string $path): void
     {
         $file = fopen($path, 'r');
 
@@ -111,7 +111,7 @@ class PopulateService {
     /**
      * @throws ModelNotFoundException
      */
-    private function populateBuildingsImages(string $path) : void
+    private function populateBuildingsImages(string $path): void
     {
         $file = fopen($path, 'r');
 
