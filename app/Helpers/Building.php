@@ -1,5 +1,6 @@
 <?php
 namespace App\Helpers;
+
 class Building
 {
     public string $name;
@@ -11,7 +12,7 @@ class Building
     public array $images;
     public string $type;
 
-    function __construct($name, $body, $mainImg, $city, $street, $amenities, $images, $type)
+    function __construct(string $name, string $body, string $mainImg, string $city, string $street, array $amenities, array $images, string $type)
     {
         $this->name = $name;
         $this->body = $body;

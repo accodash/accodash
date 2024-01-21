@@ -49,6 +49,7 @@ class PopulateService {
                     'pending' => 1
                 ]);
             }
+
             fclose($file);
         } else {
             die();
@@ -99,9 +100,8 @@ class PopulateService {
                 $building->amenities()->firstOrCreate([
                     'id' => $amenity->id
                 ]);
-
-
             }
+
             fclose($file);
         } else {
             die();
@@ -133,7 +133,6 @@ class PopulateService {
                 } catch (Exception) {
                     echo 'Building was not found' . "\n";
                 }
-
             }
             fclose($file);
         } else {

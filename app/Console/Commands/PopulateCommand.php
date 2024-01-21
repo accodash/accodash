@@ -31,16 +31,16 @@ class PopulateCommand extends Command
         $directory = $this->argument('directory') ?? null;
         $directories = scandir("./scraperLogs");
 
-        // Additional 2 for './' and '../'
+        // Additional 2 for './' and '../'.
         if (count($directories) < $settings['min_number_of_directories'] + 2) {
-            alert("There are no directories with data");
+            alert("There are no directories with data.");
             die();
         }
         $directories = array_slice($directories, 2);
 
         if ($directory) {
             if (!in_array($directory, $directories)) {
-                alert("This directory doesn't exist");
+                alert("This directory doesn't exist.");
                 die();
             }
 

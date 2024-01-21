@@ -27,7 +27,6 @@ class ScrapeCommand extends Command
     /**
      * Execute the console command.
      */
-
     public function handle()
     {
         $settings = config('scraper.command');

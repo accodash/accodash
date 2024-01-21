@@ -174,8 +174,7 @@ class ScrapeService {
         $photoNum = count($element->filter("[data-testid=\"grid-gallery\"]")->children());
 
         for ($i = 1; $i <= min($photoNum, config('scraper.crawler.min_amount_of_photos')); $i++) {
-            $img = $element->filter("[data-testid=\"grid-image\"]:nth-of-type($i) img")
-                ->attr('src');
+            $img = $element->filter("[data-testid=\"grid-image\"]:nth-of-type($i) img")->attr('src');
             $images[] =  $img;
         }
 
