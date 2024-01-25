@@ -13,14 +13,17 @@ class PopulateCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'app:populate-command {directory?}';
+    protected $signature = 'data:populate {directory?}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description =
+    'This command is used to populate your database with data.
+    It has argument {directory} which allows you to used specified directory.
+    By default it will use all directories from scraperLogs';
 
     /**
      * Execute the console command.

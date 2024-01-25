@@ -46,7 +46,7 @@ class PopulateService {
                     'type_id' => $typeId,
                     'city_id' => $cityId,
                     'main_image_url' => $values[5],
-                    'pending' => 1
+                    'pending' => false
                 ]);
             }
 

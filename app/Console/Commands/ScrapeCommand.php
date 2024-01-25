@@ -15,14 +15,18 @@ class ScrapeCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'app:scrape-command {country} {quantity?}';
+    protected $signature = 'data:scrape {country} {quantity?}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = '
+    This command scrapes buildings from provided country in {country}.
+    It has optional argument {quantity?} which allows you to choose how many buildings you want.
+    By default it is set to 100.
+    ';
 
     /**
      * Execute the console command.
@@ -32,7 +36,7 @@ class ScrapeCommand extends Command
         $settings = config('scraper.command');
         $apiUrl = $settings["countries_api"];
         $hotelQuantity = $settings['hotel_quantity'];
-        $country = strtolower($this->argument('country'));
+        $country = str_replace(" ", "%20", strtolower($this->argument('country')));
         $quantity = $this->argument('quantity') ?? $hotelQuantity;
 
         try {

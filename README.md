@@ -14,10 +14,10 @@ Add `extension=php_zip.dll` to the php.ini before running `composer install`
 
 1. Make sure that [Selenium is running](#selenium-setup).
 2. Run `php artisan migrate`.
-2. In order to scrape buidldings from the country of your desire, run `php artisan app:scrape-command {nameOfDesiredCountry} {quantity?}`. 
+2. In order to scrape buidldings from the country of your desire, run `php artisan data:scrape {nameOfDesiredCountry} {quantity?}`. 
 `nameOfDesiredCountry` is the country of origin of the buildings.
 `quantity?` is the number of buildings you wish to get; by default it is set to 100.
-3. To populate your database, run `php artisan app:populate-command {directoryName?}`.
+3. To populate your database, run `php artisan data:populate {directoryName?}`.
 `directoryName` is the name of directory you wish to use. By default the command will use all the directories in scraperLogs folder.
 
 

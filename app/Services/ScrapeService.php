@@ -33,11 +33,11 @@ class ScrapeService {
         $page = 1;
         $this->client->request('GET', 'https://www.trivago.com/');
         $directoryName = 'scraperLogs/' . strtotime('now') . '_' . $country;
-        mkdir($directoryName);
+        mkdir($directoryName, recursive: true);
 
         while ($count < $quantity) {
             // Selects the desirable country
-            if ($this->client->getCurrentURL() == 'https://www.trivago.com/') {
+            if ($page == 1 && $count == 0) {
                 $crawler = $this->client->waitFor('[name="query"]');
                 $crawler->filter('[name="query"]')->sendKeys($country);
 
@@ -108,7 +108,7 @@ class ScrapeService {
         // Description
         $this->client->waitFor("$buildingSelector [data-testid=\"info-slideout\"]", $timeout);
         $body = $this->fetchBuildingBody($buildingElement);
-        $street = $this->fetchBuildingStreet($buildingElement);
+        $street = $this->fetchBuildingAddress($buildingElement);
 
         // More amenities button
         $buildingElement->filter("[data-testid=\"toggle-all-amenities\"]")->click();
@@ -155,7 +155,7 @@ class ScrapeService {
 
     private function fetchBuildingName(WebDriverElement&Crawler $element): string
     {
-        return $element->filter('[data-testid="item-name"]')->text();
+        return str_replace(";", ",", $element->filter('[data-testid="item-name"]')->text());
     }
 
     private function fetchBuildingType(WebDriverElement&Crawler $element): string
@@ -165,17 +165,23 @@ class ScrapeService {
 
     private function fetchBuildingCity(WebDriverElement&Crawler $element): string
     {
-        return $element->filter('[data-testid="distance-label-section"]')->text();
+        return str_replace(';', ',', $element->filter('[data-testid="distance-label-section"]')->text());
     }
 
     private function fetchBuildingImages(WebDriverElement&Crawler $element): array
     {
         $images = [];
         $photoNum = count($element->filter("[data-testid=\"grid-gallery\"]")->children());
+        $i = 1;
 
-        for ($i = 1; $i <= min($photoNum, config('scraper.crawler.min_amount_of_photos')); $i++) {
+        while ($i <= min($photoNum, config('scraper.crawler.min_amount_of_photos'))) {
             $img = $element->filter("[data-testid=\"grid-image\"]:nth-of-type($i) img")->attr('src');
+
+            if (str_contains($img, ';')) {
+                continue;
+            }
             $images[] =  $img;
+            $i++;
         }
 
         return $images;
@@ -184,14 +190,14 @@ class ScrapeService {
     private function fetchBuildingBody(WebDriverElement&Crawler $element): string
     {
         $descriptionElement = $element->filter('[data-testid="accommodation-description"]');
-        return $descriptionElement->count() > 0 ? $descriptionElement->text() : '';
+        return $descriptionElement->count() > 0 ? str_replace(';', ',', $descriptionElement->text()) : '';
     }
 
-    private function fetchBuildingStreet(WebDriverElement&Crawler $element): string
+    private function fetchBuildingAddress(WebDriverElement&Crawler $element): string
     {
         $postalCode = $element->filter('[itemprop="postalCode"]')->text();
         $streetAdress = $element->filter('[itemprop="streetAddress"]')->text();
-        return $streetAdress . $postalCode;
+        return str_replace(";", ',', $streetAdress . $postalCode);
     }
 
     private function fetchBuildingAmenities(WebDriverElement&Crawler $element): array
@@ -203,7 +209,7 @@ class ScrapeService {
                 ->each(function (Crawler $amenitiesList) use (&$amenities) {
                     $amenitiesList->filter('li')
                         ->each(function (Crawler $amenity) use (&$amenities) {
-                            $amenities[] = $amenity->text();
+                            $amenities[] = str_replace(';', ',', $amenity->text());
                         });
                 });
         } catch (Exception) {
