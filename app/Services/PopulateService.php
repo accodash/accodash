@@ -68,34 +68,9 @@ class PopulateService {
 
             fclose($file);
         } else {
-            die();
+            die(config('scraper.command.buildings_filename') . ' file was not found');
         }
     }
-    private function getCountry(string $countryName): Country
-    {
-        return Country::firstOrCreate([
-            'name' => $countryName
-        ]);
-    }
-
-    private function getCityId(string $cityName, Country $country): int
-    {
-        $city = $country->cities()->firstOrCreate([
-            'name' => $cityName
-        ]);
-
-        return $city->id;
-    }
-
-    private function getBuildingTypeId(string $typeName): int
-    {
-        $type = BuildingType::firstOrCreate([
-            'name' => $typeName
-        ]);
-
-        return $type->id;
-    }
-
     private function populateAmenities(string $path): void
     {
         $file = fopen($path . config('scraper.command.amenities_filename'), 'r');
@@ -106,9 +81,9 @@ class PopulateService {
                 $buildingName = $values[0];
                 $amenityName = $values[1];
 
-                $amenity = Amenity::createOrFirst([
+                $amenity = Amenity::firstOrCreate([
                     'name' => $amenityName
-                ])->first();
+                ]);
                 $building = Building::where([
                     'name' => $buildingName
                 ])->firstOrFail();
@@ -120,7 +95,7 @@ class PopulateService {
 
             fclose($file);
         } else {
-            die();
+            die(config('scraper.command.amenities_filename') . ' file was not found');
         }
     }
 
@@ -147,13 +122,39 @@ class PopulateService {
 
                     $building->images()->save($image);
                 } catch (Exception) {
-                    echo 'Building was not found' . "\n";
+                    echo 'Could not find the building record associated with image' . "\n";
                 }
             }
             fclose($file);
         } else {
-            die();
+            die(config('scraper.command.images_filename') . ' file was not found');
         }
     }
+
+    private function getCountry(string $countryName): Country
+    {
+        return Country::firstOrCreate([
+            'name' => $countryName
+        ]);
+    }
+
+    private function getCityId(string $cityName, Country $country): int
+    {
+        $city = $country->cities()->firstOrCreate([
+            'name' => $cityName
+        ]);
+
+        return $city->id;
+    }
+
+    private function getBuildingTypeId(string $typeName): int
+    {
+        $type = BuildingType::firstOrCreate([
+            'name' => $typeName
+        ]);
+
+        return $type->id;
+    }
+
 
 }
