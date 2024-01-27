@@ -17,7 +17,8 @@ return [
     'client' => [
         'host' => 'http://localhost:4444',
         'width' => 1920,
-        'height' => 1080
+        'height' => 1080,
+        'trivago_url' => "https://www.trivago.com/"
     ],
 
     /*
@@ -35,7 +36,7 @@ return [
             'long' => 10
         ],
         'hotels_per_page' => 30,
-        'min_amount_of_photos' => 5
+        'number_of_photos' => 5
     ],
 
     /*
@@ -49,8 +50,12 @@ return [
 
     'command' => [
         'countries_api' => 'https://restcountries.com/v3.1/name/',
-        'hotel_quantity' => 100,
+        'default_hotel_quantity' => 100,
         'min_number_of_directories' => 1,
-        'min_number_of_files' => 3
+        'min_number_of_files' => 3,
+        'scraper_directory' => "./scraper_logs/",
+        'buildings_filename' => "/buildings.txt",
+        'amenities_filename' => "/amenities.txt",
+        'images_filename' => "/images.txt"
     ]
 ];

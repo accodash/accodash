@@ -13,16 +13,21 @@ class PopulateService {
     public function populate(array $directories): void
     {
         for ($i = 0; $i < count($directories); $i++) {
-            $files = scandir('./scraperLogs/' . $directories[$i]);
+            $scraperDir = config('scraper.command.scraper_directory');
+            $buildingsFilename = config('scraper.command.buildings_filename');
+            $amenitiesFilename = config('scraper.command.amenities_filename');
+            $imagesFilename = config('scraper.command.images_filename');
 
-            // Additional 2 for './' and '../'
+            $files = scandir($scraperDir . $directories[$i]);
+
+            // Additional 2 for './' and '../'.
             if (count($files) < config('scraper.command.min_number_of_files') + 2) die();
 
             $country = $this->getCountry(explode('_', $directories[$i])[1]);
 
-            $this->populateBuildings('./scraperLogs/' . $directories[$i] . '/buildings.txt', $country);
-            $this->populateAmenities('./scraperLogs/' . $directories[$i] . '/amenities.txt');
-            $this->populateBuildingsImages('./scraperLogs/' . $directories[$i] . '/images.txt');
+            $this->populateBuildings($scraperDir . $directories[$i] . $buildingsFilename, $country);
+            $this->populateAmenities($scraperDir . $directories[$i] . $amenitiesFilename);
+            $this->populateBuildingsImages($scraperDir . $directories[$i] . $imagesFilename);
         }
     }
 

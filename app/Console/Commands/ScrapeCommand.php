@@ -35,9 +35,9 @@ class ScrapeCommand extends Command
     {
         $settings = config('scraper.command');
         $apiUrl = $settings["countries_api"];
-        $hotelQuantity = $settings['hotel_quantity'];
+        $defaultQuantity = $settings['default_hotel_quantity'];
         $country = str_replace(" ", "%20", strtolower($this->argument('country')));
-        $quantity = $this->argument('quantity') ?? $hotelQuantity;
+        $quantity = $this->argument('quantity') ?? $defaultQuantity;
 
         try {
             // If failed such country doesn't exist

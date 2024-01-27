@@ -22,3 +22,6 @@ yarn-error.log
 _ide_helper.php
 _ide_helper_models.php
 /config/ide-helper.php
+
+# Scraper
+/scraper_logs

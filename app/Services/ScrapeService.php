@@ -31,8 +31,10 @@ class ScrapeService {
     {
         $count = 0;
         $page = 1;
-        $this->client->request('GET', 'https://www.trivago.com/');
-        $directoryName = 'scraperLogs/' . strtotime('now') . '_' . $country;
+
+        $this->client->request('GET', config('scraper.client.trivago_url'));
+
+        $directoryName = config('scraper.command.scraper_directory') . strtotime('now') . '_' . $country;
         mkdir($directoryName, recursive: true);
 
         while ($count < $quantity) {
@@ -129,38 +131,41 @@ class ScrapeService {
 
     private function appendToFiles(Building $building, string $directoryName): void
     {
-        $myFile = fopen($directoryName . '/images.txt', 'a');
+        $imagesFilename = config('scraper.command.images_filename');
+        $imagesFile = fopen($directoryName .  $imagesFilename, 'a');
 
         foreach ($building->images as $image) {
             $record =  $building->name . ';' . $image;
-            fwrite($myFile, $record . "\n");
+            fwrite($imagesFile, $record . "\n");
         }
-        fclose($myFile);
+        fclose($imagesFile);
 
-        $myFile = fopen($directoryName . '/buildings.txt', 'a');
+        $buildingsFilename = config('scraper.command.buildings_filename');
+        $buildingsFile = fopen($directoryName . $buildingsFilename, 'a');
         $record = $building->name . ';' . $building->body . ';' . $building->street . ';'
             . $building->city . ';' . $building->type . ';' . $building->mainImg;
-        fwrite($myFile, $record . "\n");
+        fwrite($buildingsFile, $record . "\n");
 
-        fclose($myFile);
+        fclose($buildingsFile);
 
-        $myFile = fopen($directoryName . '/amenities.txt', 'a');
+        $amenitiesFilename = config('scraper.command.amenities_filename');
+        $amenitiesFile = fopen($directoryName . $amenitiesFilename, 'a');
 
         foreach ($building->amenities as $amenity) {
             $record = $building->name . ';' . $amenity;
-            fwrite($myFile, $record . "\n");
+            fwrite($amenitiesFile, $record . "\n");
         }
-        fclose($myFile);
+        fclose($amenitiesFile);
     }
 
     private function fetchBuildingName(WebDriverElement&Crawler $element): string
     {
-        return str_replace(";", ",", $element->filter('[data-testid="item-name"]')->text());
+        return str_replace(';', ',', $element->filter('[data-testid="item-name"]')->text());
     }
 
     private function fetchBuildingType(WebDriverElement&Crawler $element): string
     {
-        return $element->filter('[data-testid="accommodation-type"]')->text();
+        return str_replace(';', '', $element->filter('[data-testid="accommodation-type"]')->text());
     }
 
     private function fetchBuildingCity(WebDriverElement&Crawler $element): string
@@ -174,7 +179,7 @@ class ScrapeService {
         $photoNum = count($element->filter("[data-testid=\"grid-gallery\"]")->children());
         $i = 1;
 
-        while ($i <= min($photoNum, config('scraper.crawler.min_amount_of_photos'))) {
+        while ($i <= min($photoNum, config('scraper.crawler.number_of_photos'))) {
             $img = $element->filter("[data-testid=\"grid-image\"]:nth-of-type($i) img")->attr('src');
 
             if (str_contains($img, ';')) {
