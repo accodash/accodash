@@ -39,17 +39,17 @@ class ScrapeCommand extends Command
         $country = str_replace(" ", "%20", strtolower($this->argument('country')));
         $quantity = $this->argument('quantity') ?? $defaultQuantity;
 
-        try {
-            // If failed such country doesn't exist
             $jsonData = file_get_contents("$apiUrl/$country?fullText=true");
+
+            if (!$jsonData) {
+                alert("No such country found.");
+                die();
+            }
             $data = json_decode($jsonData);
             $country = $data[0]->name->common;
 
             $scrapeService = new ScrapeService();
             $scrapeService->initialFetch($country, $quantity);
-        } catch (Exception) {
-            alert("no such country found");
-            die();
-        }
+
     }
 }

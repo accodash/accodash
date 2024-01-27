@@ -38,12 +38,8 @@ class ScrapeService {
         mkdir($directoryName, recursive: true);
 
         while ($count < $quantity) {
-            // Selects the desirable country
             if ($page == 1 && $count == 0) {
-                $crawler = $this->client->waitFor('[name="query"]');
-                $crawler->filter('[name="query"]')->sendKeys($country);
-
-                sleep(1);
+                $this->selectCountry($country);
 
                 $submit = $this->client->waitFor('[data-testid="search-button-with-loader"]');
                 // First click to confirm choice, Second to redirect
@@ -158,6 +154,11 @@ class ScrapeService {
         fclose($amenitiesFile);
     }
 
+    private function selectCountry(string $country): void {
+        $crawler = $this->client->waitFor('[name="query"]');
+        $crawler->filter('[name="query"]')->sendKeys($country);
+        sleep(1);
+    }
     private function fetchBuildingName(WebDriverElement&Crawler $element): string
     {
         return str_replace(';', ',', $element->filter('[data-testid="item-name"]')->text());

@@ -14,26 +14,37 @@ class PopulateService {
     {
         for ($i = 0; $i < count($directories); $i++) {
             $scraperDir = config('scraper.command.scraper_directory');
-            $buildingsFilename = config('scraper.command.buildings_filename');
-            $amenitiesFilename = config('scraper.command.amenities_filename');
-            $imagesFilename = config('scraper.command.images_filename');
 
             $files = scandir($scraperDir . $directories[$i]);
 
             // Additional 2 for './' and '../'.
-            if (count($files) < config('scraper.command.min_number_of_files') + 2) die();
+
+            if (!file_exists($scraperDir . $directories[$i] . config('scraper.command.buildings_filename'))) {
+                echo "Skipping $directories[$i]: missing " . config('scraper.command.buildings_filename') . "\n";
+                continue;
+            }
+
+            if (!file_exists($scraperDir . $directories[$i] . config('scraper.command.amenities_filename'))) {
+                echo "Skipping $directories[$i]: missing " . config('scraper.command.amenities_filename') . "\n";
+                continue;
+            }
+
+            if (!file_exists($scraperDir . $directories[$i] . config('scraper.command.images_filename'))) {
+                echo "Skipping $directories[$i]: missing " . config('scraper.command.images_filename') . "\n";
+                continue;
+            }
 
             $country = $this->getCountry(explode('_', $directories[$i])[1]);
 
-            $this->populateBuildings($scraperDir . $directories[$i] . $buildingsFilename, $country);
-            $this->populateAmenities($scraperDir . $directories[$i] . $amenitiesFilename);
-            $this->populateBuildingsImages($scraperDir . $directories[$i] . $imagesFilename);
+            $this->populateBuildings($scraperDir . $directories[$i], $country);
+            $this->populateAmenities($scraperDir . $directories[$i]);
+            $this->populateBuildingsImages($scraperDir . $directories[$i]);
         }
     }
 
     private function populateBuildings(string $path, Country $country): void
     {
-        $file = fopen($path, 'r');
+        $file = fopen($path . config('scraper.command.buildings_filename'), 'r');
 
         if ($file) {
             while (($line = fgets($file)) !== false) {
@@ -87,7 +98,7 @@ class PopulateService {
 
     private function populateAmenities(string $path): void
     {
-        $file = fopen($path, 'r');
+        $file = fopen($path . config('scraper.command.amenities_filename'), 'r');
 
         if ($file) {
             while (($line = fgets($file)) !== false) {
@@ -118,7 +129,7 @@ class PopulateService {
      */
     private function populateBuildingsImages(string $path): void
     {
-        $file = fopen($path, 'r');
+        $file = fopen($path . config('scraper.command.images_filename'), 'r');
 
         if ($file) {
             while (($line = fgets($file)) !== false) {
